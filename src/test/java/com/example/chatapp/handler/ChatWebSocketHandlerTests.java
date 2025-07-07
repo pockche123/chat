@@ -14,11 +14,13 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,18 +33,19 @@ public class ChatWebSocketHandlerTests {
     private WebSocketSession session;
 
     @Mock
-    private WebSocketMessage message;
+    private WebSocketMessage incomingMessage;
 
     @BeforeEach
     public void setUp() {
         chatWebSocketHandler = new ChatWebSocketHandler();
+        incomingMessage = mock(WebSocketMessage.class);
+        session = mock(WebSocketSession.class);
     }
 
     @Test
     public void basic_testHandle_echoesMessages(){
 //        Arrange
-        WebSocketSession session = mock(WebSocketSession.class);
-        WebSocketMessage incomingMessage = mock(WebSocketMessage.class);
+//        WebSocketMessage incomingMessage = mock(WebSocketMessage.class);
         WebSocketMessage outgoingMessage = mock(WebSocketMessage.class);
 
 //        Pretend client sends one message: "hello"
@@ -58,7 +61,6 @@ public class ChatWebSocketHandlerTests {
         when(session.send(captor.capture())).thenReturn(Mono.empty());
 
 //        Act
-        ChatWebSocketHandler chatWebSocketHandler = new ChatWebSocketHandler();
 //        block() is a subscriber but subscribe is asynchronous because starts the stream and waits to finish . you can be sure that everything has run before the test ends.
         chatWebSocketHandler.handle(session).block();
 
@@ -66,6 +68,44 @@ public class ChatWebSocketHandlerTests {
         Flux<WebSocketMessage> sentFlux = captor.getValue();
         WebSocketMessage sent = sentFlux.blockFirst(); // Just take the first message
         assertEquals(outgoingMessage, sent);
+    }
+
+    @Test
+    public void testHandle_echoesMultipleMessages(){
+
+//        Mock incoming messages
+      WebSocketMessage incomingMessage1 = mock(WebSocketMessage.class);
+      WebSocketMessage incomingMessage2 = mock(WebSocketMessage.class);
+      when(incomingMessage1.getPayloadAsText()).thenReturn("hello");
+      when(incomingMessage2.getPayloadAsText()).thenReturn("world");
+      when(session.receive()).thenReturn(Flux.just(incomingMessage1, incomingMessage2));
+
+//      Mock outgoing message dymanically
+        when(session.textMessage(anyString())).thenAnswer(invocation -> {
+            String payload = invocation.getArgument(0);
+            WebSocketMessage outgoingMessage = mock(WebSocketMessage.class);
+            when(outgoingMessage.getPayloadAsText()).thenReturn(payload);
+            return outgoingMessage;
+        });
+
+//        Capture the outgoing Flux passed to send using stubbing
+        ArgumentCaptor<Flux<WebSocketMessage>> captor = ArgumentCaptor.forClass(Flux.class);
+        when(session.send(captor.capture())).thenReturn(Mono.empty());
+
+        Mono<Void> result = chatWebSocketHandler.handle(session);
+
+
+        // Create + assert in one chained call
+        StepVerifier.create(result).verifyComplete();
+
+//       Verify that the correct messages were sent
+        Flux<WebSocketMessage> sent = captor.getValue();
+        StepVerifier.create(sent.map(WebSocketMessage::getPayloadAsText))
+                .expectNext("Echo: hello")
+                .expectNext("Echo: world")
+                .verifyComplete();
+
+
     }
 
 

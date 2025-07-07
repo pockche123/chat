@@ -7,6 +7,8 @@ import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+
+//handler manages the persistent WebSocket connection with User B, sending and receiving messages reactively. 
 @Component
 public class ChatWebSocketHandler implements WebSocketHandler {
 
