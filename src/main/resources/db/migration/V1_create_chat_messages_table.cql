@@ -9,4 +9,4 @@ CREATE TABLE IF NOT Exists chat_messages
     receiver_id     uuid,
     content         text,
     PRIMARY KEY ((conversation_id), timestamp)
-) WITH CLUSTERING ORDER BY (timestamp ASC);
+) WITH CLUSTERING ORDER BY (timestamp DESC);
