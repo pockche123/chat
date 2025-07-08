@@ -37,7 +37,7 @@ public class ChatMessageRepositoryTest {
                 .block();
 //      ASSERT
         assertEquals(1, messages.size());
-//        assertEquals(msg.getContent(), messages.getFirst().getContent());
+        assertEquals(msg.getContent(), messages.getFirst().getContent());
 
     }
 }
