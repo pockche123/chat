@@ -18,7 +18,9 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ChatMessage {
 
-    @PrimaryKey("conversation_id")
+    @PrimaryKey("message_id")
+    private UUID messageId;
+    @Column("conversation_id")
     private UUID conversationId;
     private Timestamp timestamp;
     private String content;

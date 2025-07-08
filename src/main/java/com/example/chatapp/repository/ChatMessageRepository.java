@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatMessage, UUID> {
-    Flux<ChatMessage> findByConversationId(UUID conversationId);
+    Flux<ChatMessage> findByMessageId(UUID messageId);
 
 }
