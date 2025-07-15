@@ -1,5 +1,4 @@
 USE my_chat;
-
 CREATE TABLE IF NOT Exists chat_messages
 (
     message_id uuid,
