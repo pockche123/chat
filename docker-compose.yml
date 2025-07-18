@@ -11,5 +11,14 @@ services:
     volumes:
       - ./cassandra-init:/docker-entrypoint-initdb.d
 
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
 volumes:
   cassandra-data:
+  mongo-data:
