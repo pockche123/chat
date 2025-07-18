@@ -1,9 +1,11 @@
 package com.example.chatapp.service;
 
+import com.example.chatapp.dto.AuthDTO;
 import com.example.chatapp.dto.UserDTO;
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
+import com.example.chatapp.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +30,9 @@ public class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtUtil jwtUtil;
 
 
 
@@ -96,10 +101,13 @@ public class UserServiceTest {
         assertEquals("Invalid password.", exception.getMessage());
     }
 
+
+
     @Test
     public void test_loginUser_success(){
         String username = "XXXXXXXX";
         String password = "XXXXXXXX";
+
 
         User user = new User();
         user.setUsername(username);
@@ -107,12 +115,13 @@ public class UserServiceTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
+        when(jwtUtil.generateToken(user)).thenReturn("token");
 
-        UserDTO userDTO = userService.loginUser(username, password);
+        AuthDTO authDTO = userService.loginUser(username, password);
 
-        assertNotNull(userDTO);
-        assertEquals(username, userDTO.getUsername());
-        assertEquals(UserStatus.ONLINE, userDTO.getUserStatus());
+        assertNotNull(authDTO);
+        assertEquals(username, authDTO.getUsername());
+        assertEquals(UserStatus.ONLINE, authDTO.getUserStatus());
     }
 
 }
