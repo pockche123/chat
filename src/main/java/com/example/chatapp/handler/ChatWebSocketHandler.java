@@ -5,12 +5,13 @@ import com.example.chatapp.service.ChatMessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.socket.WebSocketHandler;
-import org.springframework.web.reactive.socket.WebSocketMessage;
-import org.springframework.web.reactive.socket.WebSocketSession;
+import org.springframework.web.reactive.socket.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static org.springframework.core.io.support.SpringFactoriesLoader.FailureHandler.handleMessage;
 
 @Slf4j
 //handler manages the persistent WebSocket connection with User B, sending and receiving messages reactively. 
@@ -61,4 +62,41 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                 })
                 .then();
     }
+
+
+//    @Override
+//    public Mono<Void> handle(WebSocketSession session) {
+//        HandshakeInfo info = session.getHandshakeInfo();
+//        HttpHeaders headers = info.getHeaders();
+//
+//        String token = headers.getFirst("Authorization");
+//        if (!isValidToken(token)) {
+//            return session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
+//        }
+//
+//        // Optional: extract user info from token
+//        String userId = extractUserIdFromToken(token);
+//        session.getAttributes().put("userId", userId);
+//
+//        // Handle messaging here
+//        return session.receive()
+//                .map(WebSocketMessage::getPayloadAsText)
+//                .flatMap(message -> handleMessage(userId, message, session))
+//                .then();
+//    }
+//
+//    private boolean isValidToken(String token) {
+//        // Add real JWT validation here
+//        return token != null && token.startsWith("Bearer ");
+//    }
+//
+//    private String extractUserIdFromToken(String token) {
+//        // Decode and return userId
+//        return "user123"; // mock
+//    }
+//
+//    private Mono<Void> handleMessage(String userId, String message, WebSocketSession session) {
+//        // Save message, send to broker, etc.
+//        return Mono.empty();
+//    }
 }
