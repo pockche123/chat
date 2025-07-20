@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 @RestController
-@RequestMapping("/v1/api/messages")
 public class ChatMessageController {
 
     private final ChatMessageRepository chatMessageRepository;
@@ -18,6 +17,7 @@ public class ChatMessageController {
     }
 
     @GetMapping
+    @RequestMapping("/v1/api/messages")
     public Flux<ChatMessage> getAllMessages(){
         return chatMessageRepository.findAll();
     }
