@@ -33,56 +33,56 @@ public class ChatWebSocketHandlerTest {
     @InjectMocks
     private ChatWebSocketHandler chatWebSocketHandler;
 
-//    @Test
-//    void test_handle_validJson_callsService(){
-////        Given
-//        WebSocketSession session = mock(WebSocketSession.class);
-//        IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
-//        incomingMessageDTO.setSenderId(UUID.randomUUID());
-//        incomingMessageDTO.setReceiverId(UUID.randomUUID());
-//        incomingMessageDTO.setContent("Hello World!");
-//
-//        ChatMessage chatMessage = new ChatMessage();
-//        chatMessage.setSenderId(incomingMessageDTO.getSenderId());
-//        chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
-//        chatMessage.setContent(incomingMessageDTO.getContent());
-//
-//        String json;
-//        try{
-//            json = new ObjectMapper().writeValueAsString(incomingMessageDTO);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
-//        when(webSocketMessage.getPayloadAsText()).thenReturn(json);
-//
-//        Flux<WebSocketMessage> input = Flux.just(webSocketMessage);
-//        when(session.receive()).thenReturn(input);
-//
-//        when(chatMessageService.processIncomingMessage(any())).thenReturn(Mono.just(chatMessage));
-//
-////        When
-//        Mono<Void> result = chatWebSocketHandler.handle(session);
-//
-////        Then
-//        StepVerifier.create(result).verifyComplete();
-//        verify(chatMessageService, times(1)).processIncomingMessage(any());
-//    }
-//
-//    @Test
-//    void test_handle_invalidJson_callsService(){
-////        Given
-//        WebSocketSession session = mock(WebSocketSession.class);
-//        WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
-//        when(webSocketMessage.getPayloadAsText()).thenReturn("{invalid_json}");
-//// When
-//        when(session.receive()).thenReturn(Flux.just(webSocketMessage));
-////Act
-//        Mono<Void> result = chatWebSocketHandler.handle(session);
-////verify
-//        StepVerifier.create(result).expectError(RuntimeException.class).verify();
-//    }
+    @Test
+    void test_handle_validJson_callsService(){
+//        Given
+        WebSocketSession session = mock(WebSocketSession.class);
+        IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
+        incomingMessageDTO.setSenderId(UUID.randomUUID());
+        incomingMessageDTO.setReceiverId(UUID.randomUUID());
+        incomingMessageDTO.setContent("Hello World!");
+
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setSenderId(incomingMessageDTO.getSenderId());
+        chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
+        chatMessage.setContent(incomingMessageDTO.getContent());
+
+        String json;
+        try{
+            json = new ObjectMapper().writeValueAsString(incomingMessageDTO);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
+        when(webSocketMessage.getPayloadAsText()).thenReturn(json);
+
+        Flux<WebSocketMessage> input = Flux.just(webSocketMessage);
+        when(session.receive()).thenReturn(input);
+
+        when(chatMessageService.processIncomingMessage(any())).thenReturn(Mono.just(chatMessage));
+
+//        When
+        Mono<Void> result = chatWebSocketHandler.handle(session);
+
+//        Then
+        StepVerifier.create(result).verifyComplete();
+        verify(chatMessageService, times(1)).processIncomingMessage(any());
+    }
+
+    @Test
+    void test_handle_invalidJson_callsService(){
+//        Given
+        WebSocketSession session = mock(WebSocketSession.class);
+        WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
+        when(webSocketMessage.getPayloadAsText()).thenReturn("{invalid_json}");
+// When
+        when(session.receive()).thenReturn(Flux.just(webSocketMessage));
+//Act
+        Mono<Void> result = chatWebSocketHandler.handle(session);
+//verify
+        StepVerifier.create(result).expectError(RuntimeException.class).verify();
+    }
 
 
 
