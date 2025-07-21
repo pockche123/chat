@@ -30,15 +30,16 @@ public class ChatMessageServiceTest {
     public void test_processIncomingMessage_savestheMessage() {
         IncomingMessageDTO processIncomingMessageDTO = new IncomingMessageDTO();
         processIncomingMessageDTO.setContent("Hello World!");
-        processIncomingMessageDTO.setSenderId(UUID.randomUUID());
+   ;
         processIncomingMessageDTO.setReceiverId(UUID.randomUUID());
+        UUID senderId = UUID.randomUUID();
 
         when(processIncomingMessageDTORepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        Mono<ChatMessage> result = processIncomingMessageDTOService.processIncomingMessage(processIncomingMessageDTO);
+        Mono<ChatMessage> result = processIncomingMessageDTOService.processIncomingMessage(senderId, processIncomingMessageDTO);
 
         assertNotNull(result);
-        StepVerifier.create(processIncomingMessageDTOService.processIncomingMessage(processIncomingMessageDTO))
+        StepVerifier.create(processIncomingMessageDTOService.processIncomingMessage(senderId, processIncomingMessageDTO))
                 .assertNext(saved -> {
                     assertNotNull(saved.getMessageId());
                     assertNotNull(saved.getConversationId());
