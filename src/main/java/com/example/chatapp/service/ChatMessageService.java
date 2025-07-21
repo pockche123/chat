@@ -16,8 +16,14 @@ import java.util.UUID;
 @Service
 public class ChatMessageService {
 
-    @Autowired
-    private ChatMessageRepository chatMessageRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final MessageQueueService messageQueueService;
+    
+    public ChatMessageService(ChatMessageRepository chatMessageRepository, 
+                             MessageQueueService messageQueueService) {
+        this.chatMessageRepository = chatMessageRepository;
+        this.messageQueueService = messageQueueService;
+    }
 
     public Mono<ChatMessage> processIncomingMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
         log.info("[THREAD: {}] Processing message from {} to {}", 
@@ -39,8 +45,13 @@ public class ChatMessageService {
                 Thread.currentThread().getName(), chatMessage.getMessageId());
         
         return chatMessageRepository.save(chatMessage)
-                .doOnSuccess(saved -> log.info("[THREAD: {}] Saved chat message: {}", 
-                        Thread.currentThread().getName(), saved.getMessageId()));
+                .doOnSuccess(saved -> {
+                    log.info("[THREAD: {}] Saved chat message: {}", 
+                            Thread.currentThread().getName(), saved.getMessageId());
+                    
+                    // Step 3: Send to message sync queue);
+                    messageQueueService.enqueueMessage(saved);
+                });
     }
 
     private UUID generateConversationId(UUID senderId, UUID receiverId) {
