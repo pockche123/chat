@@ -2,6 +2,7 @@ package com.example.chatapp.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.service.ChatMessageService;
+import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,8 @@ import org.springframework.web.reactive.socket.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import static org.springframework.core.io.support.SpringFactoriesLoader.FailureHandler.handleMessage;
+import java.util.UUID;
+
 
 @Slf4j
 //handler manages the persistent WebSocket connection with User B, sending and receiving messages reactively. 
@@ -22,6 +24,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private ChatMessageService chatMessageService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private JwtUtil jwtUtil;
 
 //    @Override
 //    public Mono<Void> handle(WebSocketSession session) {
@@ -46,17 +50,29 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     @Override
     public Mono<Void> handle(WebSocketSession session) {
 
+        String token = session.getHandshakeInfo()
+                .getHeaders()
+                .getFirst("Authorization");
 
-        log.info("Hitting here!!!");
+        if (!jwtUtil.validateToken(token)) {
+            log.error("[THREAD: {}]  failed to validate token: {}",
+                    Thread.currentThread().getName(), token);
+            return session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
+        }
+
+        UUID senderId = jwtUtil.getUserIdFromToken(token);
+
+        
         return session.receive()
                 .map(WebSocketMessage::getPayloadAsText)
                 .flatMap(json -> {
-                    log.info("Received JSON: {}", json);
                     try {
                         IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
-                        return chatMessageService.processIncomingMessage(msg);
+
+                        return chatMessageService.processIncomingMessage(senderId, msg);
                     } catch (Exception e) {
-                        log.error("Failed to parse JSON: {}", e.getMessage());
+                        log.error("[THREAD: {}] failed to parse JSON: {}",
+                                Thread.currentThread().getName(),  e.getMessage());
                         return Mono.error(new RuntimeException("Invalid message format", e));
                     }
                 })

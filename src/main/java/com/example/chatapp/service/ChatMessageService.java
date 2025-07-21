@@ -19,17 +19,28 @@ public class ChatMessageService {
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
-    public Mono<ChatMessage> processIncomingMessage(IncomingMessageDTO incomingMessageDTO) {
+    public Mono<ChatMessage> processIncomingMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
+        log.info("[THREAD: {}] Processing message from {} to {}", 
+                Thread.currentThread().getName(), 
+                senderId,
+                incomingMessageDTO.getReceiverId());
+        
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setMessageId(UUID.randomUUID());
         if(chatMessage.getConversationId() == null) {
-            chatMessage.setConversationId(generateConversationId(incomingMessageDTO.getSenderId(), incomingMessageDTO.getReceiverId()));
+            chatMessage.setConversationId(generateConversationId(senderId, incomingMessageDTO.getReceiverId()));
         }
-        chatMessage.setSenderId(incomingMessageDTO.getSenderId());
+        chatMessage.setSenderId(senderId);
         chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
         chatMessage.setContent(incomingMessageDTO.getContent());
         chatMessage.setTimestamp(new Timestamp(System.currentTimeMillis()));
-        return chatMessageRepository.save(chatMessage).doOnSuccess(saved -> log.info("Saved chat message: {}", saved));
+        
+        log.info("[THREAD: {}] Saving message with ID: {}", 
+                Thread.currentThread().getName(), chatMessage.getMessageId());
+        
+        return chatMessageRepository.save(chatMessage)
+                .doOnSuccess(saved -> log.info("[THREAD: {}] Saved chat message: {}", 
+                        Thread.currentThread().getName(), saved.getMessageId()));
     }
 
     private UUID generateConversationId(UUID senderId, UUID receiverId) {

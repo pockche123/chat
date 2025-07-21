@@ -1,4 +1,4 @@
 package com.example.chatapp.service;
 
-public class OnlineUserService {
+public class MessageQueueService {
 }
