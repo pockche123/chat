@@ -1,7 +1,7 @@
 package com.example.chatapp.service;
 
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.model.ChatMessageEvent;
+import com.example.chatapp.event.ChatMessageEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,13 +15,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class MessageQueueServiceTest {
+public class SpringEventMessageQueueServiceTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
-    private MessageQueueService messageQueueService;
+    private SpringEventMessageQueueService messageQueueService;
 
     @Test
     public void should_enqueue_message(){
