@@ -15,37 +15,46 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
 public class ChatMessageServiceTest {
     @Mock
-    private ChatMessageRepository processIncomingMessageDTORepository;
+    private ChatMessageRepository chatMessageRepository;
 
     @InjectMocks
-    private ChatMessageService processIncomingMessageDTOService;
+    private ChatMessageService chatMessageService;
+
+    @Mock
+    private MessageQueueService messageQueueService;
 
     @Test
-    public void test_processIncomingMessage_savestheMessage() {
+    public void test_processIncomingMessage_savesAndEnqueuesMessage() {
+        // Given
         IncomingMessageDTO processIncomingMessageDTO = new IncomingMessageDTO();
         processIncomingMessageDTO.setContent("Hello World!");
-        processIncomingMessageDTO.setSenderId(UUID.randomUUID());
         processIncomingMessageDTO.setReceiverId(UUID.randomUUID());
+        UUID senderId = UUID.randomUUID();
 
-        when(processIncomingMessageDTORepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        // Mock repository to return the saved message
+        when(chatMessageRepository.save(any(ChatMessage.class)))
+            .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        Mono<ChatMessage> result = processIncomingMessageDTOService.processIncomingMessage(processIncomingMessageDTO);
+        // When
+        ChatMessage savedMessage = chatMessageService
+            .processIncomingMessage(senderId, processIncomingMessageDTO)
+            .block(); // Block to get the actual saved message
 
-        assertNotNull(result);
-        StepVerifier.create(processIncomingMessageDTOService.processIncomingMessage(processIncomingMessageDTO))
-                .assertNext(saved -> {
-                    assertNotNull(saved.getMessageId());
-                    assertNotNull(saved.getConversationId());
-                    assertNotNull(saved.getTimestamp());
-                })
-                .verifyComplete();
-
+        // Then
+        assertNotNull(savedMessage);
+        assertNotNull(savedMessage.getMessageId());
+        assertNotNull(savedMessage.getConversationId());
+        assertNotNull(savedMessage.getTimestamp());
+        
+        // Verify message was enqueued
+        verify(messageQueueService).enqueueMessage(savedMessage);
     }
 
 
