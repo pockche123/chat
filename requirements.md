@@ -5,4 +5,6 @@ Features:
 
 
 Things to work on: 
-- using redis for online status 
+- MULTISERVER features 
+- using redis for online status
+- using Kafka for multi-server message sync queue. 
