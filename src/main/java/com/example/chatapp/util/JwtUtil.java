@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 
 
@@ -46,6 +47,10 @@ public class JwtUtil {
 
     public String getUsernameFromToken(String token){
         return token;
+    }
+
+    public UUID getUserIdFromToken(String token){
+        return null;
     }
 
 
