@@ -2,6 +2,7 @@ package com.example.chatapp.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.service.ChatMessageService;
+import com.example.chatapp.service.OnlineUserService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private OnlineUserService onlineUserService;
 
 //    @Override
 //    public Mono<Void> handle(WebSocketSession session) {
@@ -61,6 +64,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         }
 
         UUID senderId = jwtUtil.getUserIdFromToken(token);
+        onlineUserService.markUserOnline(senderId);
 
         
         return session.receive()
@@ -76,6 +80,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                         return Mono.error(new RuntimeException("Invalid message format", e));
                     }
                 })
+                .doFinally(signal -> onlineUserService.markUserOffline(senderId))
                 .then();
     }
 
