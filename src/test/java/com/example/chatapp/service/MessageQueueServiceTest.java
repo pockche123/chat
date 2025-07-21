@@ -1,6 +1,7 @@
 package com.example.chatapp.service;
 
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.model.ChatMessageEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageQueueServiceTest {
@@ -24,6 +28,8 @@ public class MessageQueueServiceTest {
         ChatMessage message = new ChatMessage();
         message.setMessageId(UUID.randomUUID());
 
-        message
+        messageQueueService.enqueueMessage(message);
+
+        verify(eventPublisher).publishEvent(any(ChatMessageEvent.class));
     }
 }
