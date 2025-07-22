@@ -39,7 +39,7 @@ public class ChatMessageListenerTest {
         chatMessageListener.handleChatMessage(event);
 
         verify(messageDeliveryService).deliverMessage(message);
-        verify(pushNotificationService, never()).sendPushNotification(message);
+        verify(pushNotificationService, never()).sendNotification(message);
 
     }
 
@@ -54,7 +54,7 @@ public class ChatMessageListenerTest {
         chatMessageListener.handleChatMessage(event);
 
         verify(messageDeliveryService, never()).deliverMessage(message);
-        verify(pushNotificationService).sendPushNotification(message);
+        verify(pushNotificationService).sendNotification(message);
 
     }
 }
