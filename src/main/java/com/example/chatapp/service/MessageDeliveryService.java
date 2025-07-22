@@ -4,5 +4,5 @@ import com.example.chatapp.model.ChatMessage;
 
 public interface MessageDeliveryService {
 
-    public void deliverMessage(ChatMessage message);
+   void deliverMessage(ChatMessage message);
 }
