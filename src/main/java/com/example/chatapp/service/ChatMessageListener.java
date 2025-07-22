@@ -24,7 +24,7 @@ public class ChatMessageListener {
             if(onlineUserService.isUserOnline(message.getReceiverId())){
                 messageDeliveryService.deliverMessage(message);
             } else{
-                pushNotificationService.sendPushNotification(message);
+                pushNotificationService.sendNotification(message);
             }
     }
 }
