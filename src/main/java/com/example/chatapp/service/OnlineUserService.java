@@ -1,8 +1,8 @@
 package com.example.chatapp.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,18 +10,29 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OnlineUserService {
 
-    private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();
+//    private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();
+    
+    @Autowired
+    private UnreadMessageService unreadMessageService;
 
+    /**
+     * Mark a user as online and trigger delivery of any unread messages
+     */
     public void markUserOnline(UUID userId) {
-        onlineChecker.add(userId);
-
+//        boolean wasOffline = !onlineChecker.contains(userId);
+//        onlineChecker.add(userId);
+//
+//        // If the user was previously offline, deliver any unread messages
+//        if (wasOffline) {
+//            unreadMessageService.deliverUnreadMessages(userId);
+//        }
     }
-
-    public boolean isUserOnline(UUID userId) {
-        return onlineChecker.contains(userId);
-    }
-
-    public void markUserOffline(UUID userId) {
-        onlineChecker.remove(userId);
-    }
+//
+//    public boolean isUserOnline(UUID userId) {
+//        return onlineChecker.contains(userId);
+//    }
+//
+//    public void markUserOffline(UUID userId) {
+//        onlineChecker.remove(userId);
+//    }
 }
