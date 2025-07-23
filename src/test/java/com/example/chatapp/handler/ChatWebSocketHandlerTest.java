@@ -4,6 +4,7 @@ import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,9 @@ public class ChatWebSocketHandlerTest {
 
     @Mock
     private OnlineUserService onlineUserService;
+
+    @Mock
+    private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
     @InjectMocks
     private ChatWebSocketHandler chatWebSocketHandler;
@@ -173,6 +177,40 @@ public class ChatWebSocketHandlerTest {
 
     }
 
+    @Test
+    void should_register_session_when_connected(){
+        WebSocketSession session = mock(WebSocketSession.class, RETURNS_DEEP_STUBS);
+        UUID userId = UUID.randomUUID();
+
+        when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(userId);
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+
+
+        chatWebSocketHandler.handle(session).block();
+
+        verify(webSocketMessageDeliveryService).registerSession(userId, session);
+        verify(webSocketMessageDeliveryService, never()).removeSession(userId);
+
+    }
+
+    @Test
+    void should_remove_session_when_disconnected(){
+        WebSocketSession session = mock(WebSocketSession.class, RETURNS_DEEP_STUBS);
+        UUID userId = UUID.randomUUID();
+
+//        Mock JWT validation
+        when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(userId);
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+
+        // Mock session.receive() to complete immediately
+        when(session.receive()).thenReturn(Flux.empty());
+        chatWebSocketHandler.handle(session).block();
+
+        verify(webSocketMessageDeliveryService).registerSession(userId, session);
+        verify(webSocketMessageDeliveryService).removeSession(userId);
+    }
 
 
 

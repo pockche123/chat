@@ -31,4 +31,27 @@ public class SpringEventMessageQueueService implements MessageQueueService {
         // Publish message event to internal queue
         eventPublisher.publishEvent(new ChatMessageEvent(message));
     }
+
+//    @EventListener
+//    public void handleChatMessage(ChatMessageEvent event) {
+//        ChatMessage message = event.getMessage();
+//
+//        // Always persist the message first
+//        ChatMessage savedMessage = chatMessageService.saveMessage(message);
+//
+//        if (onlineUserService.isUserOnline(message.getReceiverId())) {
+//            // User online - deliver immediately
+//            messageDeliveryService.deliverMessage(savedMessage);
+//        } else {
+//            // User offline - queue message and send push notification
+//            messageQueueService.queueMessage(savedMessage);
+//            pushNotificationService.sendNotification(savedMessage);
+//        }
+//    }
+//
+//    @EventListener
+//    public void handleUserOnline(UserOnlineEvent event) {
+//        // When user comes online, deliver all queued messages
+//        messageQueueService.deliverQueuedMessages(event.getUserId());
+//    }
 }
