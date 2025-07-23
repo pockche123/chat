@@ -28,5 +28,8 @@ public class ChatMessage {
     private UUID senderId;
     @Column("receiver_id")
     private UUID receiverId;
+    @Column("status")
+    private MessageStatus status = MessageStatus.CREATED;
+
 
 }
