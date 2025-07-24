@@ -29,7 +29,7 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
     private ChatMessageRepository chatMessageRepository;
 
 
-    public void registerSession(UUID userId, WebSocketSession session){
+    public void registerSession(UUID userId, WebSocketSession session) {
         userSessions.put(userId, session);
     }
     
@@ -38,23 +38,23 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
     }
     
     @Override
-    public void deliverMessage(ChatMessage message) {
+    public Mono<Void> deliverMessage(ChatMessage message) {
         log.info("Delivering message {} to user {}", 
                 message.getMessageId(), message.getReceiverId());
 
         WebSocketSession session = userSessions.get(message.getReceiverId());
-        
         if (session != null && session.isOpen()) {
-            try {
-                message.setStatus(MessageStatus.DELIVERED);
-                chatMessageRepository.save(message).subscribe();
-
-                String json = objectMapper.writeValueAsString(message);
-                WebSocketMessage webSocketMessage = session.textMessage(json);
-                session.send(Mono.just(webSocketMessage)).subscribe();
-            } catch(Exception e){
-                log.error("Failed to deliver message: {}", e.getMessage());
-            }
+            return Mono.fromCallable(() -> objectMapper.writeValueAsString(message))
+                    .map(session::textMessage)
+                    .flatMap(webSocketMessage -> session.send(Mono.just(webSocketMessage)))
+                    .then(Mono.fromRunnable(() -> message.setStatus(MessageStatus.DELIVERED)))
+                    .then(chatMessageRepository.save(message))
+                    .then()
+                    .onErrorResume(e -> {
+                        log.error("Failed to deliver message: {}", e.getMessage());
+                        return Mono.empty();
+                    });
         }
+        return Mono.empty();
     }
 }
