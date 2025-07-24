@@ -1,4 +1,5 @@
-package com.example.chatapp.respository;
+package com.example.chatapp.unit.respository;
+
 
 
 import com.example.chatapp.model.ChatMessage;
