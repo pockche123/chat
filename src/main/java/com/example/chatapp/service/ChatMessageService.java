@@ -2,6 +2,7 @@ package com.example.chatapp.service;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class ChatMessageService {
         chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
         chatMessage.setContent(incomingMessageDTO.getContent());
         chatMessage.setTimestamp(new Timestamp(System.currentTimeMillis()));
+        chatMessage.setStatus(MessageStatus.SENT);
         
         log.info("[THREAD: {}] Saving message with ID: {}", 
                 Thread.currentThread().getName(), chatMessage.getMessageId());
