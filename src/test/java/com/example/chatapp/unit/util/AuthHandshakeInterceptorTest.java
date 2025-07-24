@@ -1,5 +1,6 @@
-package com.example.chatapp.util;
+package com.example.chatapp.unit.util;
 
+import com.example.chatapp.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

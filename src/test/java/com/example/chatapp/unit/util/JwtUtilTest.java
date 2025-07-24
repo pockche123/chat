@@ -1,6 +1,7 @@
-package com.example.chatapp.util;
+package com.example.chatapp.unit.util;
 
 import com.example.chatapp.model.User;
+import com.example.chatapp.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
