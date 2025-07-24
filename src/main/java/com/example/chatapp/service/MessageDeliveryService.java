@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface MessageDeliveryService {
 
-   Mono<Void> deliverMessage(ChatMessage message);
+   Mono<ChatMessage> deliverMessage(ChatMessage message);
 }
