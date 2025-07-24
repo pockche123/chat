@@ -21,7 +21,7 @@ public class UndeliveredMessageService {
     public Flux<ChatMessage> deliverUndeliveredMessage(UUID receiverId){
 
         return chatMessageRepository.findByReceiverIdAndStatus(receiverId, MessageStatus.SENT.toString())
-                .doOnNext(message ->   messageDeliveryService.deliverMessage(message));
+                .flatMap(message -> messageDeliveryService.deliverMessage(message));
 
     }
 }
