@@ -1,10 +1,11 @@
-package com.example.chatapp.service;
+package com.example.chatapp.unit.service;
 
 import com.example.chatapp.dto.AuthDTO;
 import com.example.chatapp.dto.UserDTO;
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
+import com.example.chatapp.service.UserService;
 import com.example.chatapp.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
