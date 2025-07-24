@@ -1,6 +1,7 @@
-package com.example.chatapp.handler;
+package com.example.chatapp.unit.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
+import com.example.chatapp.handler.ChatWebSocketHandler;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.OnlineUserService;

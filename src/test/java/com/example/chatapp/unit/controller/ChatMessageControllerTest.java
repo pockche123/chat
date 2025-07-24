@@ -1,5 +1,6 @@
-package com.example.chatapp.controller;
+package com.example.chatapp.unit.controller;
 
+import com.example.chatapp.controller.ChatMessageController;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
