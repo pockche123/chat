@@ -37,6 +37,7 @@ public class OnlineUserServiceTest {
 
 //    Then
         assertTrue(onlineUserService.isUserOnline(userId));
+        verify(undeliveredMessageService).deliverUndeliveredMessage(userId);
     }
 
     @Test
