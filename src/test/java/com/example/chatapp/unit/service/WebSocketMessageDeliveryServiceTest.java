@@ -12,6 +12,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
@@ -47,7 +48,7 @@ public class WebSocketMessageDeliveryServiceTest {
 
         webSocketMessageDeliveryService.registerSession(receiverId, session);
 
-        webSocketMessageDeliveryService.deliverMessage(message);
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).verifyComplete();
 
 //        with this we are checking to see if the message was actually sent to the recipient
         verify(session).textMessage(anyString());
@@ -65,7 +66,7 @@ public class WebSocketMessageDeliveryServiceTest {
         when(session.isOpen()).thenReturn(false);
         webSocketMessageDeliveryService.registerSession(receivedId, session);
 
-        webSocketMessageDeliveryService.deliverMessage(message);
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).verifyComplete();
 
         verify(session, never()).send(any(Publisher.class));
 
@@ -80,7 +81,8 @@ public class WebSocketMessageDeliveryServiceTest {
         webSocketMessageDeliveryService.registerSession(receiverId, session);
 
         webSocketMessageDeliveryService.removeSession(receiverId);
-        webSocketMessageDeliveryService.deliverMessage(message);
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).verifyComplete();
+
 
         verify(session, never()).send(any(Publisher.class));
     }
