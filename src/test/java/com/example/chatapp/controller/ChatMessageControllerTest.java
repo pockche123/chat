@@ -1,6 +1,7 @@
 package com.example.chatapp.controller;
 
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +34,8 @@ public class ChatMessageControllerTest {
                 new Timestamp(System.currentTimeMillis()),
                 "Hello",
                 UUID.fromString("ab662615-678b-4399-9a32-8ca8447469c2"),
-                UUID.fromString("208f1421-8f36-4f1f-b075-270ea149bb6f")
+                UUID.fromString("208f1421-8f36-4f1f-b075-270ea149bb6f"),
+                MessageStatus.SENT
         );
 
 
@@ -43,7 +45,8 @@ public class ChatMessageControllerTest {
                 new Timestamp(System.currentTimeMillis()),
                 "How's it going?",
                 UUID.fromString("ab662615-678b-4399-9a32-8ca8447469c2"),
-                UUID.fromString("208f1421-8f36-4f1f-b075-270ea149bb6f")
+                UUID.fromString("208f1421-8f36-4f1f-b075-270ea149bb6f"),
+                MessageStatus.SENT
         );
 
 
