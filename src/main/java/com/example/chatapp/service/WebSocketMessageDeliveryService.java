@@ -38,7 +38,7 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
     }
     
     @Override
-    public Mono<Void> deliverMessage(ChatMessage message) {
+    public Mono<ChatMessage> deliverMessage(ChatMessage message) {
         log.info("Delivering message {} to user {}", 
                 message.getMessageId(), message.getReceiverId());
 
@@ -49,12 +49,11 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
                     .flatMap(webSocketMessage -> session.send(Mono.just(webSocketMessage)))
                     .then(Mono.fromRunnable(() -> message.setStatus(MessageStatus.DELIVERED)))
                     .then(chatMessageRepository.save(message))
-                    .then()
                     .onErrorResume(e -> {
                         log.error("Failed to deliver message: {}", e.getMessage());
-                        return Mono.empty();
+                        return Mono.just(message);
                     });
         }
-        return Mono.empty();
+        return Mono.just(message);
     }
 }
