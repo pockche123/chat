@@ -1,4 +1,4 @@
-package com.example.chatapp.respository;
+package com.example.chatapp.unit.respository;
 
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;

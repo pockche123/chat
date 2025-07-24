@@ -1,6 +1,8 @@
-package com.example.chatapp.service;
+package com.example.chatapp.unit.service;
 
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.repository.ChatMessageRepository;
+import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +24,8 @@ public class WebSocketMessageDeliveryServiceTest {
     @Mock
     private WebSocketSession session;
 
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
 
     @InjectMocks
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -38,6 +42,7 @@ public class WebSocketMessageDeliveryServiceTest {
         when(session.isOpen()).thenReturn(true);
         when(session.send(any(Publisher.class))).thenReturn(Mono.empty());
         when(session.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(Mono.just(message));
 
 
         webSocketMessageDeliveryService.registerSession(receiverId, session);

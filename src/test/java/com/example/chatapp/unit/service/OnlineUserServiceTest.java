@@ -1,6 +1,8 @@
-package com.example.chatapp.service;
+package com.example.chatapp.unit.service;
 
 import com.example.chatapp.model.User;
+import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.UndeliveredMessageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
