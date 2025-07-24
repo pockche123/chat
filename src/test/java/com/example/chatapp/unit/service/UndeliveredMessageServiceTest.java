@@ -11,11 +11,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static reactor.core.publisher.Mono.when;
+import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
 public class UndeliveredMessageServiceTest {
@@ -42,9 +46,18 @@ public class UndeliveredMessageServiceTest {
         message2.setStatus(MessageStatus.SENT);
 
         when(chatMessageRepository.findByReceiverIdAndStatus(receiverId, MessageStatus.SENT.toString())).thenReturn(Flux.just(message1, message2));
-        undeliveredMessageService.deliverUndeliveredMessage(receiverId);
+        when(messageDeliveryService.deliverMessage(any(ChatMessage.class)))
+                .thenAnswer(invocation -> {
+                    ChatMessage msg = invocation.getArgument(0);
+                    return Mono.just(msg);
+                });
+
+        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessage(receiverId))
+                .expectNext(message1, message2)
+                .verifyComplete();
 
         verify(messageDeliveryService).deliverMessage(message1);
+        verify(messageDeliveryService).deliverMessage(message2);
 
     }
 
