@@ -48,7 +48,7 @@ public class WebSocketMessageDeliveryServiceTest {
 
         webSocketMessageDeliveryService.registerSession(receiverId, session);
 
-        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).verifyComplete();
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).expectNext(message).verifyComplete();
 
 //        with this we are checking to see if the message was actually sent to the recipient
         verify(session).textMessage(anyString());
@@ -66,7 +66,7 @@ public class WebSocketMessageDeliveryServiceTest {
         when(session.isOpen()).thenReturn(false);
         webSocketMessageDeliveryService.registerSession(receivedId, session);
 
-        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).verifyComplete();
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).expectNext(message).verifyComplete();
 
         verify(session, never()).send(any(Publisher.class));
 
@@ -81,7 +81,7 @@ public class WebSocketMessageDeliveryServiceTest {
         webSocketMessageDeliveryService.registerSession(receiverId, session);
 
         webSocketMessageDeliveryService.removeSession(receiverId);
-        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).verifyComplete();
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).expectNext(message).verifyComplete();
 
 
         verify(session, never()).send(any(Publisher.class));

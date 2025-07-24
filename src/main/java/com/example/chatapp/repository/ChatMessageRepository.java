@@ -15,4 +15,5 @@ public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatM
      * Find all messages where the specified user is the receiver
      */
     Flux<ChatMessage> findByReceiverId(UUID receiverId);
+    Flux<ChatMessage> findByReceiverIdAndStatus(UUID receiverId, String status);
 }
