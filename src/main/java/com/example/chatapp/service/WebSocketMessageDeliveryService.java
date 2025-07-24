@@ -1,8 +1,11 @@
 package com.example.chatapp.service;
 
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.model.MessageStatus;
+import com.example.chatapp.repository.ChatMessageRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -22,7 +25,10 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
 
     private final Map<UUID, WebSocketSession> userSessions = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
+
     public void registerSession(UUID userId, WebSocketSession session){
         userSessions.put(userId, session);
     }
@@ -35,11 +41,14 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
     public void deliverMessage(ChatMessage message) {
         log.info("Delivering message {} to user {}", 
                 message.getMessageId(), message.getReceiverId());
-                
+
         WebSocketSession session = userSessions.get(message.getReceiverId());
         
         if (session != null && session.isOpen()) {
             try {
+                message.setStatus(MessageStatus.DELIVERED);
+                chatMessageRepository.save(message).subscribe();
+
                 String json = objectMapper.writeValueAsString(message);
                 WebSocketMessage webSocketMessage = session.textMessage(json);
                 session.send(Mono.just(webSocketMessage)).subscribe();

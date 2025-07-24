@@ -10,29 +10,29 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OnlineUserService {
 
-//    private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();
-    
+    private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();
+
     @Autowired
-    private UnreadMessageService unreadMessageService;
+    private UndeliveredMessageService undeliveredMessageService;
 
     /**
      * Mark a user as online and trigger delivery of any unread messages
      */
     public void markUserOnline(UUID userId) {
-//        boolean wasOffline = !onlineChecker.contains(userId);
-//        onlineChecker.add(userId);
-//
-//        // If the user was previously offline, deliver any unread messages
-//        if (wasOffline) {
-//            unreadMessageService.deliverUnreadMessages(userId);
-//        }
+        boolean wasOffline = !isUserOnline(userId);
+        onlineChecker.add(userId);
+
+        // If the user was previously offline, deliver any unread messages
+        if (wasOffline) {
+            undeliveredMessageService.deliverUndeliveredMessage(userId);
+        }
     }
-//
-//    public boolean isUserOnline(UUID userId) {
-//        return onlineChecker.contains(userId);
-//    }
-//
-//    public void markUserOffline(UUID userId) {
-//        onlineChecker.remove(userId);
-//    }
+
+    public boolean isUserOnline(UUID userId) {
+        return onlineChecker.contains(userId);
+    }
+
+    public void markUserOffline(UUID userId) {
+        onlineChecker.remove(userId);
+    }
 }
