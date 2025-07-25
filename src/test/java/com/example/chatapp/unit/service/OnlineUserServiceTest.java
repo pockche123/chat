@@ -8,12 +8,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class OnlineUserServiceTest {
@@ -31,13 +34,15 @@ public class OnlineUserServiceTest {
         UUID userId  = UUID.randomUUID();
         User testUser = new User();
         testUser.setUserId(userId);
+        when(undeliveredMessageService.deliverUndeliveredMessages(userId))
+                .thenReturn(Flux.empty());
 
         //WHen
-        onlineUserService.markUserOnline(userId);
+        onlineUserService.markUserOnline(userId).block();
 
 //    Then
         assertTrue(onlineUserService.isUserOnline(userId));
-        verify(undeliveredMessageService).deliverUndeliveredMessage(userId);
+        verify(undeliveredMessageService).deliverUndeliveredMessages(userId);
     }
 
     @Test
@@ -60,10 +65,12 @@ public class OnlineUserServiceTest {
         UUID userId  = UUID.randomUUID();
         User testUser = new User();
         testUser.setUserId(userId);
+        when(undeliveredMessageService.deliverUndeliveredMessages(userId))
+                .thenReturn(Flux.empty());
 
         //WHen
-        onlineUserService.markUserOnline(userId);
+        onlineUserService.markUserOnline(userId).block();
 
-        verify(undeliveredMessageService).deliverUndeliveredMessage(userId);
+        verify(undeliveredMessageService).deliverUndeliveredMessages(userId);
     }
 }

@@ -52,7 +52,7 @@ public class UndeliveredMessageServiceTest {
                     return Mono.just(msg);
                 });
 
-        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessage(receiverId))
+        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessages(receiverId))
                 .expectNext(message1, message2)
                 .verifyComplete();
 

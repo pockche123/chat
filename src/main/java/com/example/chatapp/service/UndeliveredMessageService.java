@@ -18,7 +18,7 @@ public class UndeliveredMessageService {
     @Autowired
     MessageDeliveryService messageDeliveryService;
 
-    public Flux<ChatMessage> deliverUndeliveredMessage(UUID receiverId){
+    public Flux<ChatMessage> deliverUndeliveredMessages(UUID receiverId){
 
         return chatMessageRepository.findByReceiverIdAndStatus(receiverId, MessageStatus.SENT.toString())
                 .flatMap(message -> messageDeliveryService.deliverMessage(message).thenReturn(message));
