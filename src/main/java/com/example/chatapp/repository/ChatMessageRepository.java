@@ -4,6 +4,7 @@ import com.example.chatapp.model.ChatMessage;
 import org.springframework.data.cassandra.repository.ReactiveCassandraRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import org.springframework.data.cassandra.repository.Query;
 
 import java.util.UUID;
 
@@ -15,5 +16,6 @@ public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatM
      * Find all messages where the specified user is the receiver
      */
     Flux<ChatMessage> findByReceiverId(UUID receiverId);
+    @Query("SELECT * FROM chat_messages WHERE receiver_id = ?0 AND status = ?1 ALLOW FILTERING")
     Flux<ChatMessage> findByReceiverIdAndStatus(UUID receiverId, String status);
 }
