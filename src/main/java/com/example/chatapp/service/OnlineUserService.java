@@ -24,7 +24,7 @@ public class OnlineUserService {
 
         // If the user was previously offline, deliver any unread messages
         if (wasOffline) {
-            undeliveredMessageService.deliverUndeliveredMessage(userId);
+            undeliveredMessageService.deliverUndeliveredMessage(userId).subscribe();
         }
     }
 
