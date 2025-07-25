@@ -6,6 +6,7 @@ import com.example.chatapp.repository.ChatMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 @Component
 public class ChatMessageListener {
@@ -18,12 +19,10 @@ public class ChatMessageListener {
 
     @Autowired
     private PushNotificationService pushNotificationService;
-    
-    @Autowired
-    private ChatMessageRepository chatMessageRepository;
+
 
     @EventListener
-    public void handleChatMessage(ChatMessageEvent event){
+    public Mono<Void> handleChatMessage(ChatMessageEvent event){
         ChatMessage message = event.getMessage();
 
 
@@ -31,12 +30,14 @@ public class ChatMessageListener {
 //        chatMessageRepository.save(message).subscribe();
         if(onlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
-            messageDeliveryService.deliverMessage(message);
+            return messageDeliveryService.deliverMessage(message).then();
         } else {
             // Send push notification if user is offline
             pushNotificationService.sendNotification(message);
+            return Mono.empty();
 
             // Message is already stored and will be delivered when user comes online
         }
+
     }
 }
