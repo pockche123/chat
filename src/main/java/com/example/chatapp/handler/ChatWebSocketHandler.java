@@ -69,11 +69,11 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
         UUID senderId = jwtUtil.getUserIdFromToken(token);
 
-        onlineUserService.markUserOnline(senderId);
-        webSocketMessageDeliveryService.registerSession(senderId, session);
-
         
-        return session.receive()
+        return onlineUserService.markUserOnline(senderId)
+                        .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);})
+                                .thenMany(
+                session.receive()
                 .map(WebSocketMessage::getPayloadAsText)
                 .flatMap(json -> {
                     try {
@@ -85,7 +85,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                                 Thread.currentThread().getName(),  e.getMessage());
                         return Mono.error(new RuntimeException("Invalid message format", e));
                     }
-                })
+                }))
                 .doFinally(signal -> {
                     onlineUserService.markUserOffline(senderId);
                     webSocketMessageDeliveryService.removeSession(senderId);
