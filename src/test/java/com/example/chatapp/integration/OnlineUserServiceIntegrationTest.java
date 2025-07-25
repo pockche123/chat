@@ -54,7 +54,7 @@ public class OnlineUserServiceIntegrationTest {
 
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
-        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessage(userId))
+        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessages(userId))
                 .expectNextCount(1)
                 .verifyComplete();
 

@@ -27,7 +27,7 @@ public class OnlineUserService {
         log.info("User was offline?: {}", wasOffline);
         // If the user was previously offline, deliver any unread messages
         return wasOffline
-                ? undeliveredMessageService.deliverUndeliveredMessage(userId).then()
+                ? undeliveredMessageService.deliverUndeliveredMessages(userId).then()
                 : Mono.empty();
     }
 
