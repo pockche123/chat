@@ -73,7 +73,7 @@ public class ChatMessageServiceTest {
         when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(deliveredMessage));
         when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(chatMessageService.markDeliveredMessageAsRead(conversationId, receiverId))
+        StepVerifier.create(chatMessageService.markDeliveredMessagesAsRead(conversationId, receiverId))
                 .assertNext(message -> {
                     assertNotNull(message);
                     assertEquals(MessageStatus.READ, message.getStatus());
@@ -93,7 +93,7 @@ public class ChatMessageServiceTest {
         when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(deliveredMessage, deliveredMessage2));
         when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(chatMessageService.markDeliveredMessageAsRead(conversationId, receiverId))
+        StepVerifier.create(chatMessageService.markDeliveredMessagesAsRead(conversationId, receiverId))
                 .expectNextCount(2)
                 .verifyComplete();
 

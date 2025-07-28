@@ -60,7 +60,7 @@ public class ChatMessageService {
         return UUID.nameUUIDFromBytes(combined.getBytes());
     }
 
-    public Flux<ChatMessage> markDeliveredMessageAsRead(UUID conversationId, UUID receiverId) {
+    public Flux<ChatMessage> markDeliveredMessagesAsRead(UUID conversationId, UUID receiverId) {
         return chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)
                 .flatMap(message -> {
                     message.setStatus(MessageStatus.READ);
