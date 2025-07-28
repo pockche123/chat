@@ -66,15 +66,10 @@ public class ChatMessageServiceTest {
     @Test
     void should_mark_delivered_one_message_as_read(){
 
-        UUID messageId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
         UUID conversationId = UUID.randomUUID();
 
-        ChatMessage deliveredMessage = new ChatMessage();
-        deliveredMessage.setMessageId(messageId);
-        deliveredMessage.setReceiverId(receiverId);
-        deliveredMessage.setStatus(MessageStatus.DELIVERED);
-
+        ChatMessage deliveredMessage = createDeliveredMessage(conversationId, receiverId);
         when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(deliveredMessage));
         when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
@@ -85,6 +80,35 @@ public class ChatMessageServiceTest {
                 }).verifyComplete();
     }
 
+
+    @Test
+    void should_mark_delivered_many_messages_as_read(){
+
+        UUID receiverId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+
+        ChatMessage deliveredMessage = createDeliveredMessage(conversationId, receiverId);
+        ChatMessage deliveredMessage2 = createDeliveredMessage(conversationId, receiverId);
+
+        when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(deliveredMessage, deliveredMessage2));
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(chatMessageService.markDeliveredMessageAsRead(conversationId, receiverId))
+                .expectNextCount(2)
+                .verifyComplete();
+
+        assertEquals(MessageStatus.READ, deliveredMessage2.getStatus());
+        assertEquals(MessageStatus.READ, deliveredMessage.getStatus());
+    }
+
+    private ChatMessage createDeliveredMessage(UUID conversationId, UUID receiverId) {
+        ChatMessage message = new ChatMessage();
+        message.setMessageId(UUID.randomUUID());
+        message.setConversationId(conversationId);
+        message.setReceiverId(receiverId);
+        message.setStatus(MessageStatus.DELIVERED);
+        return message;
+    }
 
 
 }
