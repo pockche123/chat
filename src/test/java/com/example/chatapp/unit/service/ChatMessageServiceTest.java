@@ -2,6 +2,7 @@ package com.example.chatapp.unit.service;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.MessageQueueService;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
@@ -58,6 +60,27 @@ public class ChatMessageServiceTest {
         // Verify message was enqueued
         verify(messageQueueService).enqueueMessage(savedMessage);
     }
+
+    @Test
+    void should_mark_delivered_one_message_as_read(){
+
+        UUID messageId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+
+        ChatMessage deliveredMessage = new ChatMessage();
+        deliveredMessage.setMessageId(messageId);
+        deliveredMessage.setReceiverId(receiverId);
+        deliveredMessage.setStatus(MessageStatus.DELIVERED);
+
+        when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(deliveredMessage));
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(Mono.just(deliveredMessage));
+//        Flux<ChatMessage> readChatMessages = chatMessageService.
+
+
+    }
+
+
 
 
 
