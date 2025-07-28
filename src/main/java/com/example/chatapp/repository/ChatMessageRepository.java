@@ -20,6 +20,6 @@ public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatM
     @Query("SELECT * FROM chat_messages WHERE receiver_id = ?0 AND status = ?1 ALLOW FILTERING")
     Flux<ChatMessage> findByReceiverIdAndStatus(UUID receiverId, String status);
 
-    @Query("SELECT * FROM chat_message WHERe conversation_id = ?0 AND receiver_id = ?1 AND status = ?2 ALLOW FILTERING")
+    @Query("SELECT * FROM chat_messages WHERe conversation_id = ?0 AND receiver_id = ?1 AND status = ?2 ALLOW FILTERING")
     Flux<ChatMessage> findByConversationIdAndReceiverIdAndStatus(UUID conversationId, UUID receiverId, MessageStatus status);
 }
