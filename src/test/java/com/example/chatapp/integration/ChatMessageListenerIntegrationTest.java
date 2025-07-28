@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -69,6 +68,27 @@ public class ChatMessageListenerIntegrationTest {
         assertTrue(onlineUserService.isUserOnline(userId));
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
 
+    }
+
+    @Test
+    void test_chatMessageListener_handlesDeliveryError(){
+        UUID userId = UUID.randomUUID();
+        ChatMessage message = createMessage(userId);
+        chatMessageRepository.save(message).block();
+
+        onlineUserService.markUserOnline(userId).block();
+
+        // Create a mock session that will cause delivery to fail
+        WebSocketSession mockSession = mock(WebSocketSession.class);
+        when(mockSession.isOpen()).thenReturn(true);
+        when(mockSession.send(any())).thenReturn(Mono.error(new RuntimeException("WebSocket connection failed")));
+        when(mockSession.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
+        webSocketMessageDeliveryService.registerSession(userId, mockSession);
+
+        // Message should remain in SENT status since delivery failed
+        ChatMessage failedMessage = chatMessageRepository.findByMessageId(message.getMessageId())
+                .blockFirst();
+        assertEquals(MessageStatus.SENT, failedMessage.getStatus());
     }
 
     private ChatMessage createMessage(UUID receiverId){

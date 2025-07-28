@@ -2,12 +2,13 @@ package com.example.chatapp.service;
 
 import com.example.chatapp.event.ChatMessageEvent;
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.repository.ChatMessageRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class ChatMessageListener {
 
@@ -30,7 +31,12 @@ public class ChatMessageListener {
 //        chatMessageRepository.save(message).subscribe();
         if(onlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
-            return messageDeliveryService.deliverMessage(message).then();
+            return messageDeliveryService.deliverMessage(message)
+                    .doOnError(error -> log.error("Failed to deliver message {}: {}",
+                            message.getMessageId(), error.getMessage()))
+                    .onErrorReturn(message)
+                    .then();
+
         } else {
             // Send push notification if user is offline
             pushNotificationService.sendNotification(message);
