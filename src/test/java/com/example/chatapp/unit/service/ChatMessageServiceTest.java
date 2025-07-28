@@ -13,10 +13,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -74,13 +76,14 @@ public class ChatMessageServiceTest {
         deliveredMessage.setStatus(MessageStatus.DELIVERED);
 
         when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(deliveredMessage));
-        when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(Mono.just(deliveredMessage));
-//        Flux<ChatMessage> readChatMessages = chatMessageService.
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-
+        StepVerifier.create(chatMessageService.markDeliveredMessageAsRead(conversationId, receiverId))
+                .assertNext(message -> {
+                    assertNotNull(message);
+                    assertEquals(MessageStatus.READ, message.getStatus());
+                }).verifyComplete();
     }
-
-
 
 
 
