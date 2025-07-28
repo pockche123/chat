@@ -6,6 +6,7 @@ import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.sql.Timestamp;
@@ -57,5 +58,13 @@ public class ChatMessageService {
     private UUID generateConversationId(UUID senderId, UUID receiverId) {
         String combined  = senderId.compareTo(receiverId) < 0 ? senderId.toString() + receiverId.toString() : receiverId.toString() + senderId.toString();
         return UUID.nameUUIDFromBytes(combined.getBytes());
+    }
+
+    public Flux<ChatMessage> markDeliveredMessageAsRead(UUID conversationId, UUID receiverId) {
+        return chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)
+                .flatMap(message -> {
+                    message.setStatus(MessageStatus.READ);
+                    return chatMessageRepository.save(message);
+                });
     }
 }
