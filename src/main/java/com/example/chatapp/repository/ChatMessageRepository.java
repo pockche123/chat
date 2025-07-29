@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatMessage, UUID> {
+    @Query("SELECT * FROM chat_messages WHERE message_id = ?0 ALLOW FILTERING")
     Flux<ChatMessage> findByMessageId(UUID messageId);
     
     /**
