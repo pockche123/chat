@@ -11,6 +11,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class IncomingMessageDTO {
 
+    private String type = "message";
     private UUID receiverId;
     private String content;
+    private UUID conversationId;
 }

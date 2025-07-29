@@ -25,7 +25,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     @Autowired
     private ChatMessageService chatMessageService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private  ObjectMapper objectMapper;
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
@@ -78,6 +79,9 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                 .flatMap(json -> {
                     try {
                         IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
+                        if(msg.getType().equals("read_receipt")){
+                            return chatMessageService.markDeliveredMessagesAsRead(msg.getConversationId(), msg.getReceiverId());
+                        }
 
                         return chatMessageService.processIncomingMessage(senderId, msg);
                     } catch (Exception e) {
