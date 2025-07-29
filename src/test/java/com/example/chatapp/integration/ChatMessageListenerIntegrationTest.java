@@ -40,8 +40,6 @@ public class ChatMessageListenerIntegrationTest {
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
-    @Autowired
-    private MessageDeliveryService messageDeliveryService;
 
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
