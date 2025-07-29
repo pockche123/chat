@@ -77,18 +77,20 @@ public class ChatWebSocketHandlerTest {
         chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
         chatMessage.setContent(incomingMessageDTO.getContent());
 
-        String json;
-        try{
-            json = new ObjectMapper().writeValueAsString(incomingMessageDTO);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String json = "{\"receiverId\":\"" + incomingMessageDTO.getReceiverId() + "\",\"content\":\"Hello World!\"}";
 
         WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
         when(webSocketMessage.getPayloadAsText()).thenReturn(json);
 
         Flux<WebSocketMessage> input = Flux.just(webSocketMessage);
         when(session.receive()).thenReturn(input);
+
+        // Mock the ObjectMapper to return our DTO when parsing the JSON
+        try {
+            when(objectMapper.readValue(json, IncomingMessageDTO.class)).thenReturn(incomingMessageDTO);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         when(chatMessageService.processIncomingMessage(any(UUID.class), any(IncomingMessageDTO.class))).thenReturn(Mono.just(chatMessage));
         when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());

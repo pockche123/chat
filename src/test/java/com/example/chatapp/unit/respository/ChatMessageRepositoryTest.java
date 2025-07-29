@@ -29,7 +29,7 @@ public class ChatMessageRepositoryTest {
         UUID conversationId = UUID.randomUUID();
         UUID senderId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
-        ChatMessage msg = new ChatMessage(messageId, conversationId, new Timestamp(System.currentTimeMillis()), "Hello", senderId, receiverId, MessageStatus.SENT);
+        ChatMessage msg = new ChatMessage(conversationId, new Timestamp(System.currentTimeMillis()), messageId, "Hello", senderId, receiverId, MessageStatus.SENT);
 
 //        ACT
         chatMessageRepository.save(msg).block();
