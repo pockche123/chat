@@ -19,11 +19,11 @@ import java.util.UUID;
 public class ChatMessage {
     @PrimaryKeyColumn(name = "conversation_id", type= PrimaryKeyType.PARTITIONED)
     private UUID conversationId;
-    @PrimaryKeyColumn(name = "message_id", type=PrimaryKeyType.CLUSTERED)
-    private UUID messageId;
-    @Column("conversation_id")
     @PrimaryKeyColumn(name = "timestamp", type=PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
     private Timestamp timestamp;
+    @PrimaryKeyColumn(name = "message_id", type=PrimaryKeyType.CLUSTERED)
+    private UUID messageId;
+
     private String content;
     @Column("sender_id")
     private UUID senderId;
