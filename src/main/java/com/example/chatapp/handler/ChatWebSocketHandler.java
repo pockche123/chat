@@ -25,7 +25,8 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     @Autowired
     private ChatMessageService chatMessageService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private  ObjectMapper objectMapper;
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
@@ -69,15 +70,18 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
         UUID senderId = jwtUtil.getUserIdFromToken(token);
 
-        onlineUserService.markUserOnline(senderId);
-        webSocketMessageDeliveryService.registerSession(senderId, session);
-
         
-        return session.receive()
+        return onlineUserService.markUserOnline(senderId)
+                        .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);})
+                                .thenMany(
+                session.receive()
                 .map(WebSocketMessage::getPayloadAsText)
                 .flatMap(json -> {
                     try {
                         IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
+                        if(msg.getType().equals("read_receipt")){
+                            return chatMessageService.markDeliveredMessagesAsRead(msg.getConversationId(), msg.getReceiverId());
+                        }
 
                         return chatMessageService.processIncomingMessage(senderId, msg);
                     } catch (Exception e) {
@@ -85,7 +89,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                                 Thread.currentThread().getName(),  e.getMessage());
                         return Mono.error(new RuntimeException("Invalid message format", e));
                     }
-                })
+                }))
                 .doFinally(signal -> {
                     onlineUserService.markUserOffline(senderId);
                     webSocketMessageDeliveryService.removeSession(senderId);

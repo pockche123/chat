@@ -1,6 +1,8 @@
-package com.example.chatapp.service;
+package com.example.chatapp.unit.service;
 
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.repository.ChatMessageRepository;
+import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,6 +12,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
@@ -22,6 +25,8 @@ public class WebSocketMessageDeliveryServiceTest {
     @Mock
     private WebSocketSession session;
 
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
 
     @InjectMocks
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -38,11 +43,12 @@ public class WebSocketMessageDeliveryServiceTest {
         when(session.isOpen()).thenReturn(true);
         when(session.send(any(Publisher.class))).thenReturn(Mono.empty());
         when(session.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(Mono.just(message));
 
 
         webSocketMessageDeliveryService.registerSession(receiverId, session);
 
-        webSocketMessageDeliveryService.deliverMessage(message);
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).expectNext(message).verifyComplete();
 
 //        with this we are checking to see if the message was actually sent to the recipient
         verify(session).textMessage(anyString());
@@ -60,7 +66,7 @@ public class WebSocketMessageDeliveryServiceTest {
         when(session.isOpen()).thenReturn(false);
         webSocketMessageDeliveryService.registerSession(receivedId, session);
 
-        webSocketMessageDeliveryService.deliverMessage(message);
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).expectNext(message).verifyComplete();
 
         verify(session, never()).send(any(Publisher.class));
 
@@ -75,7 +81,8 @@ public class WebSocketMessageDeliveryServiceTest {
         webSocketMessageDeliveryService.registerSession(receiverId, session);
 
         webSocketMessageDeliveryService.removeSession(receiverId);
-        webSocketMessageDeliveryService.deliverMessage(message);
+        StepVerifier.create(webSocketMessageDeliveryService.deliverMessage(message)).expectNext(message).verifyComplete();
+
 
         verify(session, never()).send(any(Publisher.class));
     }

@@ -1,8 +1,11 @@
 package com.example.chatapp.service;
 
 import com.example.chatapp.model.ChatMessage;
+import com.example.chatapp.model.MessageStatus;
+import com.example.chatapp.repository.ChatMessageRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -22,8 +25,11 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
 
     private final Map<UUID, WebSocketSession> userSessions = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
-    public void registerSession(UUID userId, WebSocketSession session){
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
+
+    public void registerSession(UUID userId, WebSocketSession session) {
         userSessions.put(userId, session);
     }
     
@@ -32,20 +38,23 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
     }
     
     @Override
-    public void deliverMessage(ChatMessage message) {
+    public Mono<ChatMessage> deliverMessage(ChatMessage message) {
         log.info("Delivering message {} to user {}", 
-                message.getMessageId(), message.getReceiverId());
-                
+                message.getContent(), message.getReceiverId());
+
         WebSocketSession session = userSessions.get(message.getReceiverId());
-        
         if (session != null && session.isOpen()) {
-            try {
-                String json = objectMapper.writeValueAsString(message);
-                WebSocketMessage webSocketMessage = session.textMessage(json);
-                session.send(Mono.just(webSocketMessage)).subscribe();
-            } catch(Exception e){
-                log.error("Failed to deliver message: {}", e.getMessage());
-            }
+            return Mono.fromCallable(() -> objectMapper.writeValueAsString(message))
+                    .map(session::textMessage)
+                    .flatMap(webSocketMessage -> session.send(Mono.just(webSocketMessage)))
+                    .then(Mono.fromRunnable(() -> message.setStatus(MessageStatus.DELIVERED)))
+                    .then(chatMessageRepository.save(message))
+                    .doOnNext(msg -> log.info("Status: {}", msg.getStatus()))
+                    .onErrorResume(e -> {
+                        log.error("Failed to deliver message: {}", e.getMessage());
+                        return Mono.just(message);
+                    });
         }
+        return Mono.just(message);
     }
 }
