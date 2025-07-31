@@ -1,4 +1,5 @@
 USE my_chat;
+DROP TABlE IF EXISTS chat_messages;
 CREATE TABLE IF NOT Exists chat_messages
 (
     message_id uuid,
@@ -7,5 +8,6 @@ CREATE TABLE IF NOT Exists chat_messages
     sender_id       uuid,
     receiver_id     uuid,
     content         text,
-    PRIMARY KEY ((message_id), timestamp)
+    status          text,
+    PRIMARY KEY ((conversation_id), timestamp, message_id)
 ) WITH CLUSTERING ORDER BY (timestamp DESC);
