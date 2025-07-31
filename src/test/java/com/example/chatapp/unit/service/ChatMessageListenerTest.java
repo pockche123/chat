@@ -4,7 +4,7 @@ import com.example.chatapp.event.ChatMessageEvent;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageListener;
 import com.example.chatapp.service.MessageDeliveryService;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.PushNotificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +22,7 @@ import java.util.UUID;
 public class ChatMessageListenerTest {
 
     @Mock
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Mock
     private MessageDeliveryService messageDeliveryService;
@@ -39,7 +39,7 @@ public class ChatMessageListenerTest {
         message.setReceiverId(UUID.randomUUID());
         ChatMessageEvent event = new ChatMessageEvent(message);
 
-        when(onlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
+        when(LocalOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
         when(messageDeliveryService.deliverMessage(message)).thenReturn(Mono.empty());
 
         chatMessageListener.handleChatMessage(event);
@@ -55,7 +55,7 @@ public class ChatMessageListenerTest {
         message.setReceiverId(UUID.randomUUID());
         ChatMessageEvent event = new ChatMessageEvent(message);
 
-        when(onlineUserService.isUserOnline(message.getReceiverId())).thenReturn(false);
+        when(LocalOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(false);
 
         chatMessageListener.handleChatMessage(event);
 
