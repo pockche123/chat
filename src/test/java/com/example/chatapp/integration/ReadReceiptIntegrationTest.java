@@ -1,22 +1,18 @@
 package com.example.chatapp.integration;
 
-import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.handler.ChatWebSocketHandler;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
-import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.OnlineUserService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.socket.WebSocketMessage;
@@ -39,14 +35,11 @@ public class ReadReceiptIntegrationTest {
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler;
 
-    @Autowired
-    private ChatMessageService chatMessageService;
 
     @Autowired
     private OnlineUserService onlineUserService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
@@ -71,7 +64,7 @@ public class ReadReceiptIntegrationTest {
 
 
 
-
+//    too much mocking; grey area for integration testing
     @Test
     void should_markMessagesAsRead_when_readReceiptReceived_viaWebSocket() throws JsonProcessingException {
 
