@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 public class ChatMessageListener {
 
     @Autowired
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Autowired
     private MessageDeliveryService messageDeliveryService;
@@ -29,7 +29,7 @@ public class ChatMessageListener {
 
         // Always store the message regardless of user's online status
 //        chatMessageRepository.save(message).subscribe();
-        if(onlineUserService.isUserOnline(message.getReceiverId())){
+        if(LocalOnlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
             return messageDeliveryService.deliverMessage(message)
                     .doOnError(error -> log.error("Failed to deliver message {}: {}",

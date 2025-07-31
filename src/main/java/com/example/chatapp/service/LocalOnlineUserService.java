@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class OnlineUserService {
+public class LocalOnlineUserService {
 
     private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();
 

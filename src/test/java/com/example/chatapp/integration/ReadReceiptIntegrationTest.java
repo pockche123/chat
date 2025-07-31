@@ -4,7 +4,7 @@ import com.example.chatapp.handler.ChatWebSocketHandler;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ public class ReadReceiptIntegrationTest {
 
 
     @Autowired
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
 
 
@@ -56,8 +56,8 @@ public class ReadReceiptIntegrationTest {
         }
 
         @Bean
-        public OnlineUserService onlineUserService() {
-            return mock(OnlineUserService.class);
+        public LocalOnlineUserService LocalOnlineUserService() {
+            return mock(LocalOnlineUserService.class);
         }
 
     }
@@ -78,7 +78,7 @@ public class ReadReceiptIntegrationTest {
 
         when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(senderId);
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(onlineUserService.markUserOnline(any())).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any())).thenReturn(Mono.empty());
 
         ChatMessage deliveredMessage = createDeliveredMessage(receiverId, senderId, conversationId);
         chatMessageRepository.save(deliveredMessage).block();
