@@ -39,7 +39,7 @@ public class SpringEventMessageQueueService implements MessageQueueService {
 //        // Always persist the message first
 //        ChatMessage savedMessage = chatMessageService.saveMessage(message);
 //
-//        if (onlineUserService.isUserOnline(message.getReceiverId())) {
+//        if (LocalOnlineUserService.isUserOnline(message.getReceiverId())) {
 //            // User online - deliver immediately
 //            messageDeliveryService.deliverMessage(savedMessage);
 //        } else {
