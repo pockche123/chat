@@ -1,5 +1,6 @@
 package com.example.chatapp.unit.service;
 
+import com.example.chatapp.service.DistributedOnlineUserService;
 import com.example.chatapp.service.UndeliveredMessageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,9 +11,11 @@ import org.springframework.data.redis.core.ReactiveSetOperations;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -20,20 +23,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class DistributedOnlineUserServiceTest {
 
-    @Mock
-    private ReactiveStringRedisTemplate sharedRedisTemplate;
-
-    @Mock
-    private UndeliveredMessageService undeliveredMessageService;
-
-    @InjectMocks
-    private DisributedOnlineUserService disributedOnlineUserService;
+//    @Mock
+//    private ReactiveStringRedisTemplate sharedRedisTemplate;
+//
+//    @Mock
+//    private UndeliveredMessageService undeliveredMessageService;
+//
+//    @InjectMocks
+//    private DistributedOnlineUserService distributedOnlineUserService;
 
     @Test
     void should_share_online_status_with_distributed_service(){
-//        ReactiveStringRedisTemplate sharedRedisTemplate = mock(ReactiveStringRedisTemplate.class);
+        ReactiveStringRedisTemplate sharedRedisTemplate = mock(ReactiveStringRedisTemplate.class);
         ReactiveSetOperations<String, String> setOps = mock(ReactiveSetOperations.class);
-//        UndeliveredMessageService undeliveredService = mock(UndeliveredMessageService.class);
+        UndeliveredMessageService undeliveredMessageService = mock(UndeliveredMessageService.class);
 
         UUID userId = UUID.randomUUID();
 
@@ -43,8 +46,13 @@ public class DistributedOnlineUserServiceTest {
         when(setOps.add("online_users", userId.toString())).thenReturn(Mono.just(1L));
         when(undeliveredMessageService.deliverUndeliveredMessages(any())).thenReturn(Flux.empty());
 
-        DistributedOnineUserService server1 = new DistributedOnlineUserService(sharedRedisTemplate, undeliveredMessageService);
+        DistributedOnlineUserService server1 = new DistributedOnlineUserService(sharedRedisTemplate, undeliveredMessageService);
+        DistributedOnlineUserService server2 = new DistributedOnlineUserService(sharedRedisTemplate, undeliveredMessageService);
 
+//        Act- Server 1 marks user online
+        server1.markUserOnline(userId).block();
+
+        assertTrue(server2.isUserOnline(userId));
     }
 
 }
