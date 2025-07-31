@@ -15,6 +15,7 @@ import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -53,6 +54,27 @@ public class DistributedOnlineUserServiceTest {
         server1.markUserOnline(userId).block();
 
         assertTrue(server2.isUserOnline(userId));
+    }
+
+    @Test
+    void should_mark_user_offline_across_servers(){
+        ReactiveStringRedisTemplate sharedRedisTemplate = mock(ReactiveStringRedisTemplate.class);
+        ReactiveSetOperations<String, String> setOps = mock(ReactiveSetOperations.class);
+        UndeliveredMessageService undeliveredService = mock(UndeliveredMessageService.class);
+
+        UUID userId = UUID.randomUUID();
+
+        when(sharedRedisTemplate.opsForSet()).thenReturn(setOps);
+        when(setOps.remove("online_users", userId.toString())).thenReturn(Mono.just(1L));
+        when(setOps.isMember("online_users", userId.toString())).thenReturn(Mono.just(false));
+
+        DistributedOnlineUserService server1 = new DistributedOnlineUserService(sharedRedisTemplate, undeliveredService);
+        DistributedOnlineUserService server2 = new DistributedOnlineUserService(sharedRedisTemplate, undeliveredService);
+
+        server1.markUserOffline(userId);
+        assertFalse(server2.isUserOnline(userId));
+
+
     }
 
 }

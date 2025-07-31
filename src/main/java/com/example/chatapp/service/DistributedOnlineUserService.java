@@ -38,7 +38,8 @@ public class DistributedOnlineUserService implements OnlineUserService{
 
     @Override
     public void markUserOffline(UUID userId) {
-
+         sharedRedisTemplate.opsForSet()
+                 .remove("online_users", userId.toString()).block();
     }
 
     public Mono<Boolean> isUserOnlineReactive(UUID userId){
