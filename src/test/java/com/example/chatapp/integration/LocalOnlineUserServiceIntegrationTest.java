@@ -3,11 +3,10 @@ package com.example.chatapp.integration;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.UndeliveredMessageService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,10 +25,10 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class OnlineUserServiceIntegrationTest {
+public class LocalOnlineUserServiceIntegrationTest {
 
     @Autowired
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -45,19 +44,17 @@ public class OnlineUserServiceIntegrationTest {
         UUID userId = UUID.randomUUID();
         ChatMessage undeliveredMessage= createUndeliveredMessage(userId);
         chatMessageRepository.save(undeliveredMessage).block();
-        onlineUserService.markUserOnline(userId).block();
+
 
         WebSocketSession mockSession = mock(WebSocketSession.class);
         when(mockSession.isOpen()).thenReturn(true);
         when(mockSession.send(any())).thenReturn(Mono.empty());
         when(mockSession.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
-
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
-        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessages(userId))
-                .expectNextCount(1)
-                .verifyComplete();
-
+//       act
+        LocalOnlineUserService.markUserOnline(userId).block();
+//        assert
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(undeliveredMessage.getMessageId())
                 .blockFirst();
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());

@@ -4,7 +4,7 @@ import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.handler.ChatWebSocketHandler;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,7 +45,7 @@ public class ChatWebSocketHandlerTest {
     private ObjectMapper objectMapper;
 
     @Mock
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Mock
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -93,7 +93,7 @@ public class ChatWebSocketHandlerTest {
         }
 
         when(chatMessageService.processIncomingMessage(any(UUID.class), any(IncomingMessageDTO.class))).thenReturn(Mono.just(chatMessage));
-        when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
 //        When
@@ -115,7 +115,7 @@ public class ChatWebSocketHandlerTest {
         when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
         when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(UUID.randomUUID());
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
         WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
@@ -160,7 +160,7 @@ public class ChatWebSocketHandlerTest {
         when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
         when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(userId);
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
         // Mock session.receive() to complete immediately
@@ -168,8 +168,8 @@ public class ChatWebSocketHandlerTest {
         chatWebSocketHandler.handle(session).block();
 
 
-        verify(onlineUserService).markUserOnline(userId);
-        verify(onlineUserService).markUserOffline(userId);
+        verify(LocalOnlineUserService).markUserOnline(userId);
+        verify(LocalOnlineUserService).markUserOffline(userId);
 
     }
 
@@ -183,7 +183,7 @@ public class ChatWebSocketHandlerTest {
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
         when(session.receive()).thenReturn(Flux.empty());
 
-        when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
 
@@ -203,7 +203,7 @@ public class ChatWebSocketHandlerTest {
         when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
         when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(userId);
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
         // Mock session.receive() to complete immediately
@@ -224,7 +224,7 @@ public class ChatWebSocketHandlerTest {
         when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
         when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(userId);
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(onlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
+        when(LocalOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
         UUID receiverId = UUID.randomUUID();
         UUID conversationId = UUID.randomUUID();

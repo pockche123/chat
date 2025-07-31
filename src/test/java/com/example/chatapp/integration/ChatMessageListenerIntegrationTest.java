@@ -6,7 +6,7 @@ import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.ChatMessageListener;
 import com.example.chatapp.service.MessageDeliveryService;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 public class ChatMessageListenerIntegrationTest {
 
     @Autowired
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Autowired
     private ChatMessageListener chatMessageListener;
@@ -51,7 +51,7 @@ public class ChatMessageListenerIntegrationTest {
         ChatMessageEvent messageEvent = new ChatMessageEvent(message);
         chatMessageRepository.save(message).block();
 
-        onlineUserService.markUserOnline(userId).block();
+        LocalOnlineUserService.markUserOnline(userId).block();
         WebSocketSession mockSession = mock(WebSocketSession.class);
         when(mockSession.isOpen()).thenReturn(true);
         when(mockSession.send(any())).thenReturn(Mono.empty());
@@ -63,7 +63,7 @@ public class ChatMessageListenerIntegrationTest {
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(message.getMessageId())
                 .blockFirst();
 
-        assertTrue(onlineUserService.isUserOnline(userId));
+        assertTrue(LocalOnlineUserService.isUserOnline(userId));
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
 
     }
@@ -74,7 +74,7 @@ public class ChatMessageListenerIntegrationTest {
         ChatMessage message = createMessage(userId);
         chatMessageRepository.save(message).block();
 
-        onlineUserService.markUserOnline(userId).block();
+        LocalOnlineUserService.markUserOnline(userId).block();
 
         // Create a mock session that will cause delivery to fail
         WebSocketSession mockSession = mock(WebSocketSession.class);
