@@ -44,19 +44,17 @@ public class LocalOnlineUserServiceIntegrationTest {
         UUID userId = UUID.randomUUID();
         ChatMessage undeliveredMessage= createUndeliveredMessage(userId);
         chatMessageRepository.save(undeliveredMessage).block();
-        LocalOnlineUserService.markUserOnline(userId).block();
+
 
         WebSocketSession mockSession = mock(WebSocketSession.class);
         when(mockSession.isOpen()).thenReturn(true);
         when(mockSession.send(any())).thenReturn(Mono.empty());
         when(mockSession.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
-
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
-        StepVerifier.create(undeliveredMessageService.deliverUndeliveredMessages(userId))
-                .expectNextCount(1)
-                .verifyComplete();
-
+//       act
+        LocalOnlineUserService.markUserOnline(userId).block();
+//        assert
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(undeliveredMessage.getMessageId())
                 .blockFirst();
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
