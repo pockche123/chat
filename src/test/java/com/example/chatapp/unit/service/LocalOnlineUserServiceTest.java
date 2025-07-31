@@ -1,7 +1,7 @@
 package com.example.chatapp.unit.service;
 
 import com.example.chatapp.model.User;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.UndeliveredMessageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,7 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -19,10 +18,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class OnlineUserServiceTest {
+public class LocalOnlineUserServiceTest {
 
     @InjectMocks
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Mock
     private UndeliveredMessageService undeliveredMessageService;
@@ -38,10 +37,10 @@ public class OnlineUserServiceTest {
                 .thenReturn(Flux.empty());
 
         //WHen
-        onlineUserService.markUserOnline(userId).block();
+        LocalOnlineUserService.markUserOnline(userId).block();
 
 //    Then
-        assertTrue(onlineUserService.isUserOnline(userId));
+        assertTrue(LocalOnlineUserService.isUserOnline(userId));
         verify(undeliveredMessageService).deliverUndeliveredMessages(userId);
     }
 
@@ -53,10 +52,10 @@ public class OnlineUserServiceTest {
         testUser.setUserId(userId);
 
         //WHen
-        onlineUserService.markUserOffline(userId);
+        LocalOnlineUserService.markUserOffline(userId);
 
 //    Then
-        assertFalse(onlineUserService.isUserOnline(userId));
+        assertFalse(LocalOnlineUserService.isUserOnline(userId));
     }
 
     @Test
@@ -69,7 +68,7 @@ public class OnlineUserServiceTest {
                 .thenReturn(Flux.empty());
 
         //WHen
-        onlineUserService.markUserOnline(userId).block();
+        LocalOnlineUserService.markUserOnline(userId).block();
 
         verify(undeliveredMessageService).deliverUndeliveredMessages(userId);
     }

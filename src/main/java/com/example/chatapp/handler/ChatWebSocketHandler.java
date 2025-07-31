@@ -2,7 +2,7 @@ package com.example.chatapp.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.service.ChatMessageService;
-import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +30,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    private OnlineUserService onlineUserService;
+    private LocalOnlineUserService LocalOnlineUserService;
 
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -71,7 +71,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         UUID senderId = jwtUtil.getUserIdFromToken(token);
 
         
-        return onlineUserService.markUserOnline(senderId)
+        return LocalOnlineUserService.markUserOnline(senderId)
                         .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);})
                                 .thenMany(
                 session.receive()
@@ -91,7 +91,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                     }
                 }))
                 .doFinally(signal -> {
-                    onlineUserService.markUserOffline(senderId);
+                    LocalOnlineUserService.markUserOffline(senderId);
                     webSocketMessageDeliveryService.removeSession(senderId);
 
                 })
