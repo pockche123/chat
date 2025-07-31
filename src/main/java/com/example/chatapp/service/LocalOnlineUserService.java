@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class LocalOnlineUserService {
+public class LocalOnlineUserService implements OnlineUserService{
 
     private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();
 
@@ -21,6 +21,7 @@ public class LocalOnlineUserService {
     /**
      * Mark a user as online and trigger delivery of any unread messages
      */
+    @Override
     public Mono<Void> markUserOnline(UUID userId) {
         boolean wasOffline = !isUserOnline(userId);
         onlineChecker.add(userId);
@@ -31,10 +32,11 @@ public class LocalOnlineUserService {
                 : Mono.empty();
     }
 
+    @Override
     public boolean isUserOnline(UUID userId) {
         return onlineChecker.contains(userId);
     }
-
+    @Override
     public void markUserOffline(UUID userId) {
         onlineChecker.remove(userId);
     }
