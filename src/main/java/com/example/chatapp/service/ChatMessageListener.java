@@ -12,24 +12,26 @@ import reactor.core.publisher.Mono;
 @Component
 public class ChatMessageListener {
 
-    @Autowired
-    private LocalOnlineUserService LocalOnlineUserService;
 
     @Autowired
     private MessageDeliveryService messageDeliveryService;
 
     @Autowired
     private PushNotificationService pushNotificationService;
+    @Autowired
+    private LocalOnlineUserService localOnlineUserService;
 
 
     @EventListener
     public Mono<Void> handleChatMessage(ChatMessageEvent event){
         ChatMessage message = event.getMessage();
 
+        return processMessage(message, localOnlineUserService);
 
-        // Always store the message regardless of user's online status
-//        chatMessageRepository.save(message).subscribe();
-        if(LocalOnlineUserService.isUserOnline(message.getReceiverId())){
+    }
+
+    private Mono<Void> processMessage(ChatMessage message, OnlineUserService onlineUserService){
+        if(onlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
             return messageDeliveryService.deliverMessage(message)
                     .doOnError(error -> log.error("Failed to deliver message {}: {}",
@@ -44,6 +46,8 @@ public class ChatMessageListener {
 
             // Message is already stored and will be delivered when user comes online
         }
-
     }
+
+
+
 }
