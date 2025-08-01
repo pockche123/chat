@@ -8,3 +8,4 @@ Things to work on:
 - MULTISERVER features 
 - using redis for online status
 - using Kafka for multi-server message sync queue. 
+- kubernetes config
