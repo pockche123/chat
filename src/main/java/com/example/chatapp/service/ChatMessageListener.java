@@ -31,7 +31,6 @@ public class ChatMessageListener {
         return processMessage(message, localOnlineUserService);
 
     }
-
     private Mono<Void> processMessage(ChatMessage message, OnlineUserService onlineUserService){
         if(onlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
@@ -50,7 +49,7 @@ public class ChatMessageListener {
         }
     }
 
-
+//    @KafkaListener(topics = "chat-messages", groupId = "chat-service")
     public Mono<Void> handleKafkaMessage(ChatMessage message) {
         return processMessage(message, distributedOnlineUserService);
     }
