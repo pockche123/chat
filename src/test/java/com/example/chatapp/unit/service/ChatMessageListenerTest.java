@@ -2,10 +2,7 @@ package com.example.chatapp.unit.service;
 
 import com.example.chatapp.event.ChatMessageEvent;
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.service.ChatMessageListener;
-import com.example.chatapp.service.MessageDeliveryService;
-import com.example.chatapp.service.LocalOnlineUserService;
-import com.example.chatapp.service.PushNotificationService;
+import com.example.chatapp.service.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,6 +27,9 @@ public class ChatMessageListenerTest {
     @Mock
     private PushNotificationService pushNotificationService;
 
+    @Mock
+    private DistributedOnlineUserService distributedOnlineUserService;
+
     @InjectMocks
     private ChatMessageListener chatMessageListener;
 
@@ -42,7 +42,7 @@ public class ChatMessageListenerTest {
         when(LocalOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
         when(messageDeliveryService.deliverMessage(message)).thenReturn(Mono.empty());
 
-        chatMessageListener.handleChatMessage(event);
+        chatMessageListener.handleChatMessage(event).block();
 
         verify(messageDeliveryService).deliverMessage(message);
         verify(pushNotificationService, never()).sendNotification(message);
@@ -57,10 +57,24 @@ public class ChatMessageListenerTest {
 
         when(LocalOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(false);
 
-        chatMessageListener.handleChatMessage(event);
+        chatMessageListener.handleChatMessage(event).block();
 
         verify(messageDeliveryService, never()).deliverMessage(message);
         verify(pushNotificationService).sendNotification(message);
 
     }
+
+    @Test
+    public void should_deliverKafkaMessage_whenUserOnline(){
+        ChatMessage message = new ChatMessage();
+        message.setReceiverId(UUID.randomUUID());
+
+        when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
+        when(messageDeliveryService.deliverMessage(message)).thenReturn(Mono.empty());
+
+        chatMessageListener.handleKafkaMessage(message).block();
+
+        verify(messageDeliveryService).deliverMessage(message);
+    }
+
 }

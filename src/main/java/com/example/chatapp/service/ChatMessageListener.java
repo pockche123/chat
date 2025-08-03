@@ -20,6 +20,8 @@ public class ChatMessageListener {
     private PushNotificationService pushNotificationService;
     @Autowired
     private LocalOnlineUserService localOnlineUserService;
+    @Autowired
+    private DistributedOnlineUserService distributedOnlineUserService;
 
 
     @EventListener
@@ -49,5 +51,7 @@ public class ChatMessageListener {
     }
 
 
-
+    public Mono<Void> handleKafkaMessage(ChatMessage message) {
+        return processMessage(message, distributedOnlineUserService);
+    }
 }
