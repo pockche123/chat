@@ -52,10 +52,8 @@ public class ChatMessageListenerIntegrationTest {
         chatMessageRepository.save(message).block();
 
         LocalOnlineUserService.markUserOnline(userId).block();
-        WebSocketSession mockSession = mock(WebSocketSession.class);
-        when(mockSession.isOpen()).thenReturn(true);
-        when(mockSession.send(any())).thenReturn(Mono.empty());
-        when(mockSession.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
+        WebSocketSession mockSession = createSession();
+
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
         chatMessageListener.handleChatMessage(messageEvent).block();
@@ -99,6 +97,14 @@ public class ChatMessageListenerIntegrationTest {
         message.setStatus(MessageStatus.SENT);
         message.setContent("test message");
         return message;
+    }
+
+    private WebSocketSession createSession() {
+        WebSocketSession mockSession = mock(WebSocketSession.class);
+        when(mockSession.isOpen()).thenReturn(true);
+        when(mockSession.send(any())).thenReturn(Mono.empty());
+        when(mockSession.textMessage(anyString())).thenReturn(mock(WebSocketMessage.class));
+        return mockSession;
     }
 
 }
