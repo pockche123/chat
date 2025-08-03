@@ -7,6 +7,6 @@ public class KafkaMessageQueueService implements MessageQueueService {
     KafkaTemplate<String, ChatMessage> kafkaTemplate;
     @Override
     public void enqueueMessage(ChatMessage message) {
-        kafkaTemplate.send("chat-messages", message);
+        kafkaTemplate.send("chat-messages", message.getReceiverId().toString(), message);
     }
 }
