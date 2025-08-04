@@ -17,10 +17,9 @@ import java.util.UUID;
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final MessageQueueService messageQueueService;
+    private final KafkaMessageQueueService messageQueueService;
     
-    public ChatMessageService(ChatMessageRepository chatMessageRepository, 
-                             MessageQueueService messageQueueService) {
+    public ChatMessageService(ChatMessageRepository chatMessageRepository, KafkaMessageQueueService messageQueueService) {
         this.chatMessageRepository = chatMessageRepository;
         this.messageQueueService = messageQueueService;
     }
