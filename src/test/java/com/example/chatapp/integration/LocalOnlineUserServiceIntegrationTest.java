@@ -33,8 +33,6 @@ public class LocalOnlineUserServiceIntegrationTest {
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
-    @Autowired
-    private UndeliveredMessageService undeliveredMessageService;
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
