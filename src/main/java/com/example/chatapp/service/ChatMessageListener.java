@@ -14,7 +14,10 @@ public class ChatMessageListener {
 
 
     @Autowired
-    private MessageDeliveryService messageDeliveryService;
+    private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
+
+    @Autowired
+    private DistributedMessageDeliveryService distributedMessageDeliveryService;
 
     @Autowired
     private PushNotificationService pushNotificationService;
@@ -28,10 +31,10 @@ public class ChatMessageListener {
     public Mono<Void> handleChatMessage(ChatMessageEvent event){
         ChatMessage message = event.getMessage();
 
-        return processMessage(message, localOnlineUserService);
+        return processMessage(message, localOnlineUserService, webSocketMessageDeliveryService);
 
     }
-    private Mono<Void> processMessage(ChatMessage message, OnlineUserService onlineUserService){
+    private Mono<Void> processMessage(ChatMessage message, OnlineUserService onlineUserService, MessageDeliveryService messageDeliveryService){
         if(onlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
             return messageDeliveryService.deliverMessage(message)
@@ -51,6 +54,6 @@ public class ChatMessageListener {
 
 //    @KafkaListener(topics = "chat-messages", groupId = "chat-service")
     public Mono<Void> handleKafkaMessage(ChatMessage message) {
-        return processMessage(message, distributedOnlineUserService);
+        return processMessage(message, distributedOnlineUserService, distributedMessageDeliveryService);
     }
 }
