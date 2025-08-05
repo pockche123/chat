@@ -11,6 +11,7 @@ import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 
@@ -50,6 +51,9 @@ public class ChatMessageListenerIntegrationTest extends BaseIntegrationTest{
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
+    @Autowired
+    private ReactiveStringRedisTemplate redisTemplate;
+
 
 
     @Test
@@ -57,10 +61,17 @@ public class ChatMessageListenerIntegrationTest extends BaseIntegrationTest{
         UUID userId = UUID.randomUUID();
         ChatMessage message = createMessage(userId);
 
+        redisTemplate.opsForValue()
+                .set("user:server:" + userId, "localhost:8080")
+                .block();
+
+
         chatMessageRepository.save(message).block();
 
         DistributedOnlineUserService.markUserOnline(userId).block();
         WebSocketSession mockSession = createSession();
+
+
 
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
