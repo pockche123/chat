@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class LocalOnlineUserServiceIntegrationTest {
+public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private LocalOnlineUserService LocalOnlineUserService;
