@@ -1,6 +1,6 @@
 package com.example.chatapp.service;
 
-import com.example.chatapp.event.ChatMessageEvent;
+
 import com.example.chatapp.model.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,26 +14,15 @@ public class ChatMessageListener {
 
 
     @Autowired
-    private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
-
-    @Autowired
     private DistributedMessageDeliveryService distributedMessageDeliveryService;
 
     @Autowired
     private PushNotificationService pushNotificationService;
-    @Autowired
-    private LocalOnlineUserService localOnlineUserService;
+
     @Autowired
     private DistributedOnlineUserService distributedOnlineUserService;
 
 
-    @EventListener
-    public Mono<Void> handleChatMessage(ChatMessageEvent event){
-        ChatMessage message = event.getMessage();
-
-        return processMessage(message, localOnlineUserService, webSocketMessageDeliveryService);
-
-    }
     private Mono<Void> processMessage(ChatMessage message, OnlineUserService onlineUserService, MessageDeliveryService messageDeliveryService){
         if(onlineUserService.isUserOnline(message.getReceiverId())){
             // Deliver immediately if user is online
