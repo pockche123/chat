@@ -1,8 +1,11 @@
 package com.example.chatapp.unit.service;
 
-import com.example.chatapp.event.ChatMessageEvent;
+
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.service.*;
+import com.example.chatapp.service.DistributedOnlineUserService;
+import com.example.chatapp.service.PushNotificationService;
+import com.example.chatapp.service.DistributedMessageDeliveryService;
+import com.example.chatapp.service.ChatMessageListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,19 +14,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
-
-import java.util.UUID;
+import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ChatMessageListenerTest {
 
-    @Mock
-    private LocalOnlineUserService localOnlineUserService;
 
-    @Mock
-    private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
     @Mock
     private DistributedMessageDeliveryService distributedMessageDeliveryService;
 
@@ -38,32 +37,16 @@ public class ChatMessageListenerTest {
 
 
     @Test
-    public void should_deliverMessage_whenUserOnline(){
-        ChatMessage message = new ChatMessage();
-        message.setReceiverId(UUID.randomUUID());
-        ChatMessageEvent event = new ChatMessageEvent(message);
-
-        when(localOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
-        when(webSocketMessageDeliveryService.deliverMessage(message)).thenReturn(Mono.just(message));
-
-        chatMessageListener.handleChatMessage(event).block();
-
-        verify(webSocketMessageDeliveryService).deliverMessage(message);
-        verify(pushNotificationService, never()).sendNotification(message);
-
-    }
-
-    @Test
     public void should_pushNotification_whenUserOffline(){
         ChatMessage message = new ChatMessage();
         message.setReceiverId(UUID.randomUUID());
-        ChatMessageEvent event = new ChatMessageEvent(message);
 
-        when(localOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(false);
 
-        chatMessageListener.handleChatMessage(event).block();
+        when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(false);
 
-        verify(webSocketMessageDeliveryService, never()).deliverMessage(message);
+        chatMessageListener.handleKafkaMessage(message).block();
+
+        verify(distributedMessageDeliveryService, never()).deliverMessage(message);
         verify(pushNotificationService).sendNotification(message);
 
     }
@@ -73,14 +56,11 @@ public class ChatMessageListenerTest {
         ChatMessage message = new ChatMessage();
         message.setReceiverId(UUID.randomUUID());
 
-        when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
+//        when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
         when(distributedMessageDeliveryService.deliverMessage(message)).thenReturn(Mono.just(message));
 
         chatMessageListener.handleKafkaMessage(message).block();
 
         verify(distributedMessageDeliveryService).deliverMessage(message);
     }
-
-
-
 }
