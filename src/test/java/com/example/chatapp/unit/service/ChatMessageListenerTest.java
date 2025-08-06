@@ -56,7 +56,7 @@ public class ChatMessageListenerTest {
         ChatMessage message = new ChatMessage();
         message.setReceiverId(UUID.randomUUID());
 
-//        when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
+        when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
         when(distributedMessageDeliveryService.deliverMessage(message)).thenReturn(Mono.just(message));
 
         chatMessageListener.handleKafkaMessage(message).block();

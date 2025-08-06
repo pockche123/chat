@@ -1,4 +1,4 @@
-package com.example.chatapp.integration;
+package com.example.chatapp.integration.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
