@@ -20,8 +20,12 @@ public class RedisTestConfig {
         return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort));
     }
 
-    @Bean
-    public ReactiveStringRedisTemplate reactiveStringRedisTemplate(ReactiveRedisConnectionFactory factory) {
-        return new ReactiveStringRedisTemplate(factory);
-    }
+
+    // Ensures ReactiveStringRedisTemplate uses our test Redis connection factory
+    // instead of the auto-configured production factory
+
+//    @Bean
+//    public ReactiveStringRedisTemplate reactiveStringRedisTemplate(ReactiveRedisConnectionFactory factory) {
+//        return new ReactiveStringRedisTemplate(factory);
+//    }
 }
