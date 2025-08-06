@@ -1,6 +1,7 @@
 package com.example.chatapp.integration;
 
 
+import com.example.chatapp.integration.config.RedisTestConfig;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
