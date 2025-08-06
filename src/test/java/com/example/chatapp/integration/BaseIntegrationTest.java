@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import;
 
 
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @Testcontainers
 @Import(RedisTestConfig.class)
 public abstract class BaseIntegrationTest {
@@ -28,12 +28,18 @@ public abstract class BaseIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
+//        dynamic container properties
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", redis::getFirstMappedPort);
-
         registry.add("spring.cassandra.contact-points", cassandra::getHost);
         registry.add("spring.cassandra.port", cassandra::getFirstMappedPort);
+
+
+//        static test properties
+        registry.add("server.id", () -> "localhost:8080");
         registry.add("spring.cassandra.local-datacenter", () -> "datacenter1");
         registry.add("spring.cassandra.keyspace-name", () -> "chatapp_test");
+
+
     }
 }
