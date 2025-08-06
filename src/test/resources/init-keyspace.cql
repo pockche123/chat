@@ -1,3 +1,4 @@
+-- important for integration tests
 CREATE KEYSPACE IF NOT EXISTS chatapp_test
     WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
 
