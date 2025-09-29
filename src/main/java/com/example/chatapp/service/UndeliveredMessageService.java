@@ -16,7 +16,7 @@ public class UndeliveredMessageService {
     private ChatMessageRepository chatMessageRepository;
 
     @Autowired
-    MessageDeliveryService messageDeliveryService;
+    WebSocketMessageDeliveryService messageDeliveryService;
 
     public Flux<ChatMessage> deliverUndeliveredMessages(UUID receiverId){
 

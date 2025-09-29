@@ -5,6 +5,7 @@ import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.ChatMessageService;
+import com.example.chatapp.service.KafkaMessageQueueService;
 import com.example.chatapp.service.MessageQueueService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,7 @@ public class ChatMessageServiceTest {
     private ChatMessageService chatMessageService;
 
     @Mock
-    private MessageQueueService messageQueueService;
+    private KafkaMessageQueueService messageQueueService;
 
     @Test
     public void test_processIncomingMessage_savesAndEnqueuesMessage() {
