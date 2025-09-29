@@ -5,6 +5,7 @@ import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.MessageDeliveryService;
 import com.example.chatapp.service.UndeliveredMessageService;
+import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +29,7 @@ public class UndeliveredMessageServiceTest {
     ChatMessageRepository chatMessageRepository;
 
     @Mock
-    MessageDeliveryService messageDeliveryService;
+    WebSocketMessageDeliveryService messageDeliveryService;
 
     @InjectMocks
     UndeliveredMessageService undeliveredMessageService;
