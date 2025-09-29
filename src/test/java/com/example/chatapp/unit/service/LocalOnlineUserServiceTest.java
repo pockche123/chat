@@ -33,6 +33,7 @@ public class LocalOnlineUserServiceTest {
         UUID userId  = UUID.randomUUID();
         User testUser = new User();
         testUser.setUserId(userId);
+
         when(undeliveredMessageService.deliverUndeliveredMessages(userId))
                 .thenReturn(Flux.empty());
 

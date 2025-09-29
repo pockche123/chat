@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class LocalOnlineUserServiceIntegrationTest {
+public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private LocalOnlineUserService LocalOnlineUserService;
@@ -33,8 +33,6 @@ public class LocalOnlineUserServiceIntegrationTest {
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
-    @Autowired
-    private UndeliveredMessageService undeliveredMessageService;
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;

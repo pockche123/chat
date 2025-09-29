@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class ReadReceiptIntegrationTest {
+public class ReadReceiptIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler;
