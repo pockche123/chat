@@ -6,7 +6,6 @@ import com.example.chatapp.service.DistributedOnlineUserService;
 import com.example.chatapp.service.PushNotificationService;
 import com.example.chatapp.service.DistributedMessageDeliveryService;
 import com.example.chatapp.service.ChatMessageListener;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,9 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
-
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ChatMessageListenerTest {

@@ -5,6 +5,7 @@ import com.example.chatapp.model.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -41,7 +42,7 @@ public class ChatMessageListener {
         }
     }
 
-//    @KafkaListener(topics = "chat-messages", groupId = "chat-service")
+    @KafkaListener(topics = "chat-messages", groupId = "chat-service")
     public Mono<Void> handleKafkaMessage(ChatMessage message) {
         return processMessage(message, distributedOnlineUserService, distributedMessageDeliveryService);
     }
