@@ -42,3 +42,5 @@ Which would you like to tackle first?
 2. Factory Pattern for creating message processors
 3. Observer Pattern for message events
 4. Command Pattern for message operations
+
+5. handle() too long in ChatWebSocketHandler 

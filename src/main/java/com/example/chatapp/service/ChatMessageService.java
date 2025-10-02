@@ -38,6 +38,7 @@ public class ChatMessageService {
         chatMessage.setSenderId(senderId);
         chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
         chatMessage.setContent(incomingMessageDTO.getContent());
+        chatMessage.setMessageId(UUID.randomUUID());
         chatMessage.setTimestamp(new Timestamp(System.currentTimeMillis()));
         chatMessage.setStatus(MessageStatus.SENT);
         
@@ -66,4 +67,6 @@ public class ChatMessageService {
                     return chatMessageRepository.save(message);
                 });
     }
+
+
 }

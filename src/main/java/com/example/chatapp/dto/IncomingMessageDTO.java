@@ -15,4 +15,5 @@ public class IncomingMessageDTO {
     private UUID receiverId;
     private String content;
     private UUID conversationId;
+    private UUID messageId;
 }
