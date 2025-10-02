@@ -4,7 +4,6 @@ import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.LocalOnlineUserService;
-import com.example.chatapp.service.UndeliveredMessageService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -69,4 +67,5 @@ public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
         message.setContent("test message");
         return message;
     }
+
 }

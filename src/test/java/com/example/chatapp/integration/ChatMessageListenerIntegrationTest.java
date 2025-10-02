@@ -75,7 +75,7 @@ public class ChatMessageListenerIntegrationTest extends BaseIntegrationTest{
 
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
-        chatMessageListener.handleKafkaMessage(message).block();
+        chatMessageListener.handleKafkaMessage(message);
 
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(message.getMessageId())
                 .blockFirst();
