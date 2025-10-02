@@ -5,8 +5,10 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
+@Service
 public class FirebasePushNotificationService implements PushNotificationService{
     private final FirebaseMessaging firebaseMessaging;
     private final DeviceTokenService deviceTokenService;

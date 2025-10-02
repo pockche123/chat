@@ -2,10 +2,12 @@ package com.example.chatapp.service;
 
 import com.example.chatapp.model.UserDevice;
 import com.example.chatapp.repository.UserDeviceRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class DeviceTokenService {
 
     private final UserDeviceRepository userDeviceRepository;
