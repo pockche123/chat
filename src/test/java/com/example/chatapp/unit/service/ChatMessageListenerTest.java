@@ -41,7 +41,7 @@ public class ChatMessageListenerTest {
 
         when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(false);
 
-        chatMessageListener.handleKafkaMessage(message).block();
+        chatMessageListener.handleKafkaMessage(message);
 
         verify(distributedMessageDeliveryService, never()).deliverMessage(message);
         verify(pushNotificationService).sendNotification(message);
@@ -56,7 +56,7 @@ public class ChatMessageListenerTest {
         when(distributedOnlineUserService.isUserOnline(message.getReceiverId())).thenReturn(true);
         when(distributedMessageDeliveryService.deliverMessage(message)).thenReturn(Mono.just(message));
 
-        chatMessageListener.handleKafkaMessage(message).block();
+        chatMessageListener.handleKafkaMessage(message);
 
         verify(distributedMessageDeliveryService).deliverMessage(message);
     }

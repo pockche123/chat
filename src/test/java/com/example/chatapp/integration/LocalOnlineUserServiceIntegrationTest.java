@@ -68,6 +68,4 @@ public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
         return message;
     }
 
-    public static class NotificationIntegrationTest {
-    }
 }
