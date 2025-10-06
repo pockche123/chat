@@ -1,17 +1,29 @@
 package com.example.chatapp.integration;
 
+import com.example.chatapp.integration.config.CassandraTestConfig;
+import com.example.chatapp.integration.config.RedisTestConfig;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
+import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
+import org.springframework.test.annotation.DirtiesContext;
+import java.time.Duration;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -20,13 +32,31 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("test")
-public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
+@EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
+@Testcontainers
+public class LocalOnlineUserServiceIntegrationTest {
+
+    @Container
+    static final GenericContainer<?> redis = RedisTestConfig.createRedisContainer();
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        RedisTestConfig.configureRedis(registry, redis);
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
+
+
 
     @Autowired
-    private LocalOnlineUserService LocalOnlineUserService;
+    private LocalOnlineUserService localOnlineUserService;
 
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -35,8 +65,29 @@ public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
+    @AfterEach
+    void cleanupTestData() {
+        // Clear Cassandra tables
+        chatMessageRepository.deleteAll().block();
+        // Clear Redis
+    }
+
+
     @Test
     void shouldDeliverUndeliveredMessagesWhenUserComesOnline(){
+        // Wait for Cassandra to be ready with more robust check
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(500))
+                .until(() -> {
+                    try {
+                        // Try to perform a simple operation that requires the keyspace to exist
+                        chatMessageRepository.count().block(Duration.ofSeconds(5));
+                        return true;
+                    } catch (Exception e) {
+                        System.out.println("Cassandra not ready yet: " + e.getMessage());
+                        return false;
+                    }
+                });
         UUID userId = UUID.randomUUID();
         ChatMessage undeliveredMessage= createUndeliveredMessage(userId);
         chatMessageRepository.save(undeliveredMessage).block();
@@ -49,7 +100,7 @@ public class LocalOnlineUserServiceIntegrationTest extends BaseIntegrationTest {
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
 //       act
-        LocalOnlineUserService.markUserOnline(userId).block();
+        localOnlineUserService.markUserOnline(userId).block();
 //        assert
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(undeliveredMessage.getMessageId())
                 .blockFirst();

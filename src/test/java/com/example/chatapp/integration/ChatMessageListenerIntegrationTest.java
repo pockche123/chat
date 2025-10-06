@@ -1,18 +1,28 @@
 package com.example.chatapp.integration;
 
-
+import com.example.chatapp.integration.config.CassandraTestConfig;
+import com.example.chatapp.integration.config.RedisTestConfig;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.ChatMessageListener;
-import com.example.chatapp.service.ServerRegistryService;
 import com.example.chatapp.service.DistributedOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
 
 import org.springframework.web.reactive.socket.WebSocketMessage;
@@ -29,14 +39,28 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 
 
 
 @SpringBootTest
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
-public class ChatMessageListenerIntegrationTest extends BaseIntegrationTest{
+@Testcontainers
+@Slf4j
+public class ChatMessageListenerIntegrationTest {
+
+    @Container
+    static final GenericContainer<?> redis = RedisTestConfig.createRedisContainer();
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        RedisTestConfig.configureRedis(registry, redis);
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
 
     @Autowired
     private DistributedOnlineUserService DistributedOnlineUserService;
@@ -53,7 +77,6 @@ public class ChatMessageListenerIntegrationTest extends BaseIntegrationTest{
 
     @Autowired
     private ReactiveStringRedisTemplate redisTemplate;
-
 
 
     @Test
@@ -75,12 +98,14 @@ public class ChatMessageListenerIntegrationTest extends BaseIntegrationTest{
 
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
+        // Act - trigger message processing (now synchronous)
         chatMessageListener.handleKafkaMessage(message);
 
+        // Assert - delivery should be complete
+        assertTrue(DistributedOnlineUserService.isUserOnline(userId));
+        
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(message.getMessageId())
                 .blockFirst();
-
-        assertTrue(DistributedOnlineUserService.isUserOnline(userId));
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
 
     }

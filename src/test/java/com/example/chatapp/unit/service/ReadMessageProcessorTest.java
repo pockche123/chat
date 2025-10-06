@@ -37,10 +37,9 @@ public class ReadMessageProcessorTest {
     }
 
     @Test
-    void processMessage_returnsChatMessageWithStatusReadWhenMessageIsDelivered(){
+    void processMessage_throwsRuntimeException_whenMessageIsNotFound(){
         UUID conversationId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
-        UUID receiverId = UUID.randomUUID();
         UUID senderId = UUID.randomUUID();
 
         IncomingMessageDTO incomingMessageDTO= new IncomingMessageDTO();
@@ -48,20 +47,12 @@ public class ReadMessageProcessorTest {
         incomingMessageDTO.setConversationId(conversationId);
         incomingMessageDTO.setMessageId(messageId);
 
-        ChatMessage message = new ChatMessage();
-        message.setConversationId(conversationId);
-        message.setMessageId(messageId);
-        message.setReceiverId(receiverId);
-        message.setStatus(MessageStatus.DELIVERED);
-
-        when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(Mono.just(message));
-        when(chatMessageRepository.findByConversationIdAndMessageId(conversationId, messageId)).thenThrow(new RuntimeException("Message is not delivered yet"));
-
+        when(chatMessageRepository.findByConversationIdAndMessageId(conversationId, messageId))
+                .thenReturn(Mono.error(new RuntimeException("Message is not delivered yet")));
 
         assertThrows(RuntimeException.class, () -> {
             readMessageProcessor.processMessage(senderId, incomingMessageDTO).block();
         });
-
     }
 
 

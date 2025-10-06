@@ -2,10 +2,7 @@ package com.example.chatapp.unit.service;
 
 
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.service.DistributedOnlineUserService;
-import com.example.chatapp.service.PushNotificationService;
-import com.example.chatapp.service.DistributedMessageDeliveryService;
-import com.example.chatapp.service.ChatMessageListener;
+import com.example.chatapp.service.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +21,7 @@ public class ChatMessageListenerTest {
     private DistributedMessageDeliveryService distributedMessageDeliveryService;
 
     @Mock
-    private PushNotificationService pushNotificationService;
+    private FirebasePushNotificationService pushNotificationService;
 
     @Mock
     private DistributedOnlineUserService distributedOnlineUserService;
