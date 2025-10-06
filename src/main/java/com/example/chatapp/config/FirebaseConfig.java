@@ -20,7 +20,14 @@ public class FirebaseConfig {
         FirebaseOptions firebaseOptions = FirebaseOptions.builder()
                 .setCredentials(credentials)
                 .build();
-        FirebaseApp app = FirebaseApp.initializeApp(firebaseOptions, "chat-app");
+        FirebaseApp app;
+        try {
+            app = FirebaseApp.getInstance("chat-app");
+        } catch (IllegalStateException e) {
+            // App doesn't exist, create it
+            app = FirebaseApp.initializeApp(firebaseOptions, "chat-app");
+        }
+
         return FirebaseMessaging.getInstance(app);
     }
 }

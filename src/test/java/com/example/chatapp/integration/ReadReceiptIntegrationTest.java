@@ -1,6 +1,8 @@
 package com.example.chatapp.integration;
 
 import com.example.chatapp.handler.ChatWebSocketHandler;
+import com.example.chatapp.integration.config.CassandraTestConfig;
+import com.example.chatapp.integration.config.RedisTestConfig;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
@@ -10,6 +12,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 
 import org.springframework.boot.test.context.TestConfiguration;
@@ -29,8 +39,23 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("test")
-public class ReadReceiptIntegrationTest extends BaseIntegrationTest {
+@EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
+@Testcontainers
+public class ReadReceiptIntegrationTest {
+
+    @Container
+    static final GenericContainer<?> redis = RedisTestConfig.createRedisContainer();
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        RedisTestConfig.configureRedis(registry, redis);
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
 
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler;

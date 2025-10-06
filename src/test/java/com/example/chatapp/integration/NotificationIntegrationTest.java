@@ -1,6 +1,8 @@
 package com.example.chatapp.integration;
 
 import com.example.chatapp.dto.UserDeviceRequest;
+import com.example.chatapp.integration.config.CassandraTestConfig;
+import com.example.chatapp.integration.config.RedisTestConfig;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.model.User;
@@ -22,6 +24,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import com.example.chatapp.service.DistributedOnlineUserService;
 
 
@@ -37,7 +46,21 @@ import static org.mockito.Mockito.verify;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class NotificationIntegrationTest extends BaseIntegrationTest{
+@EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
+@Testcontainers
+public class NotificationIntegrationTest {
+
+    @Container
+    static final GenericContainer<?> redis = RedisTestConfig.createRedisContainer();
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        RedisTestConfig.configureRedis(registry, redis);
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
     @Autowired
     private TestRestTemplate restTemplate;
 

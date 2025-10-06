@@ -1,31 +1,21 @@
 package com.example.chatapp.integration.config;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import java.time.Duration;
 
-@Configuration
 public class RedisTestConfig {
-
-    @Bean
-    @Primary
-    public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory(
-            @Value("${spring.data.redis.host}") String redisHost,
-            @Value("${spring.data.redis.port}") int redisPort) {
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort));
+    
+    public static GenericContainer<?> createRedisContainer() {
+        return new GenericContainer<>("redis:alpine")
+                .withExposedPorts(6379)
+                .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1))
+                .withStartupTimeout(Duration.ofMinutes(2));
     }
-
-
-    // Ensures ReactiveStringRedisTemplate uses our test Redis connection factory
-    // instead of the auto-configured production factory
-
-//    @Bean
-//    public ReactiveStringRedisTemplate reactiveStringRedisTemplate(ReactiveRedisConnectionFactory factory) {
-//        return new ReactiveStringRedisTemplate(factory);
-//    }
+    
+    public static void configureRedis(DynamicPropertyRegistry registry, GenericContainer<?> redis) {
+        registry.add("spring.data.redis.host", redis::getHost);
+        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
+    }
 }
