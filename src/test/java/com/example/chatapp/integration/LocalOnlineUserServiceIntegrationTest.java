@@ -23,7 +23,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
 import org.springframework.test.annotation.DirtiesContext;
-import java.time.Duration;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -32,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -76,18 +74,6 @@ public class LocalOnlineUserServiceIntegrationTest {
     @Test
     void shouldDeliverUndeliveredMessagesWhenUserComesOnline(){
         // Wait for Cassandra to be ready with more robust check
-        await().atMost(Duration.ofSeconds(30))
-                .pollInterval(Duration.ofMillis(500))
-                .until(() -> {
-                    try {
-                        // Try to perform a simple operation that requires the keyspace to exist
-                        chatMessageRepository.count().block(Duration.ofSeconds(5));
-                        return true;
-                    } catch (Exception e) {
-                        System.out.println("Cassandra not ready yet: " + e.getMessage());
-                        return false;
-                    }
-                });
         UUID userId = UUID.randomUUID();
         ChatMessage undeliveredMessage= createUndeliveredMessage(userId);
         chatMessageRepository.save(undeliveredMessage).block();
