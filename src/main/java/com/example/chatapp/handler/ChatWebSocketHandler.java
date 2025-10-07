@@ -1,6 +1,7 @@
 package com.example.chatapp.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
+import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
@@ -28,7 +29,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    private LocalOnlineUserService LocalOnlineUserService;
+    private LocalOnlineUserService localOnlineUserService;
 
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
@@ -68,7 +69,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
         UUID senderId = jwtUtil.getUserIdFromToken(token);
 
-        return LocalOnlineUserService.markUserOnline(senderId)
+        return localOnlineUserService.markUserOnline(senderId)
                         .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);})
                                 .thenMany(
                 session.receive()
@@ -84,12 +85,43 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                     }
                 }))
                 .doFinally(signal -> {
-                    LocalOnlineUserService.markUserOffline(senderId);
+                    localOnlineUserService.markUserOffline(senderId);
                     webSocketMessageDeliveryService.removeSession(senderId);
 
                 })
                 .then();
     }
+
+    public Mono<UUID> authenticateSession(WebSocketSession session) {
+        String token = session.getHandshakeInfo()
+                .getHeaders()
+                .getFirst("Authorization");
+        if (!jwtUtil.validateToken(token)){
+            log.error("Failed to validate token: {}", token);
+            return Mono.error(new RuntimeException("Unauthorized"));
+        }
+        return Mono.just(jwtUtil.getUserIdFromToken(token));
+    }
+
+
+    public Mono<Void> registerSession(UUID senderId, WebSocketSession session) {
+        return localOnlineUserService.markUserOnline(senderId)
+                .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);});
+
+    }
+
+    public Mono<ChatMessage> processIncomingMessage(String json, UUID senderId){
+        try {
+            IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
+            return chatMessageService.processIncomingMessage(senderId, msg);
+        } catch (Exception e) {
+            log.error("[THREAD: {}] failed to parse JSON: {}", Thread.currentThread().getName(),  e.getMessage());
+            return Mono.error(new RuntimeException("Invalid message format", e));
+        }
+    }
+
+}
+
 
 
 //    @Override
@@ -127,4 +159,5 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 //        // Save message, send to broker, etc.
 //        return Mono.empty();
 //    }
-}
+
+
