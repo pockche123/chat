@@ -7,6 +7,8 @@ import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.KafkaMessageQueueService;
 import com.example.chatapp.service.MessageQueueService;
+import com.example.chatapp.service.messageprocessor.MessageProcessorFactory;
+import com.example.chatapp.service.messageprocessor.TextMessageProcessor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,11 +33,16 @@ public class ChatMessageServiceTest {
     @Mock
     private ChatMessageRepository chatMessageRepository;
 
+    @Mock
+    private MessageProcessorFactory messageProcessorFactory;
+
+    @Mock
+    private TextMessageProcessor textMessageProcessor;
+
     @InjectMocks
     private ChatMessageService chatMessageService;
 
-    @Mock
-    private KafkaMessageQueueService messageQueueService;
+
 
     @Test
     public void test_processIncomingMessage_savesAndEnqueuesMessage() {
@@ -45,23 +52,23 @@ public class ChatMessageServiceTest {
         processIncomingMessageDTO.setReceiverId(UUID.randomUUID());
         UUID senderId = UUID.randomUUID();
 
-        // Mock repository to return the saved message
-        when(chatMessageRepository.save(any(ChatMessage.class)))
-            .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         // When
-        ChatMessage savedMessage = chatMessageService
-            .processIncomingMessage(senderId, processIncomingMessageDTO)
-            .block(); // Block to get the actual saved message
+        ChatMessage mockSavedMessage = new ChatMessage();
+        mockSavedMessage.setMessageId(UUID.randomUUID());
+
+        when(messageProcessorFactory.getProcessor(processIncomingMessageDTO.getType())).thenReturn(textMessageProcessor);
+        when(textMessageProcessor.processMessage(senderId, processIncomingMessageDTO)).thenReturn(Mono.just(mockSavedMessage));
+
+        ChatMessage savedMessage = chatMessageService.processIncomingMessage(senderId, processIncomingMessageDTO).block();
 
         // Then
         assertNotNull(savedMessage);
-        assertNotNull(savedMessage.getMessageId());
-        assertNotNull(savedMessage.getConversationId());
-        assertNotNull(savedMessage.getTimestamp());
+        assertEquals(mockSavedMessage.getMessageId(), savedMessage.getMessageId());
         
         // Verify message was enqueued
-        verify(messageQueueService).enqueueMessage(savedMessage);
+        verify(messageProcessorFactory).getProcessor(processIncomingMessageDTO.getType());
+        verify(textMessageProcessor).processMessage(senderId, processIncomingMessageDTO);
     }
 
     @Test

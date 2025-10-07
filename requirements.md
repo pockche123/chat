@@ -35,3 +35,12 @@ Currently your services are basic stubs:
 Which would you like to tackle first?
 1. Redis: Make it track online users properly (login/logout)
 2. Kafka: Add a consumer to receive messages from other servers
+
+
+
+1. Strategy Pattern for notification services (Firebase, Logging, etc.)
+2. Factory Pattern for creating message processors
+3. Observer Pattern for message events
+4. Command Pattern for message operations
+
+5. handle() too long in ChatWebSocketHandler 

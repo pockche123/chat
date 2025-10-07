@@ -6,6 +6,7 @@ import org.springframework.data.cassandra.repository.ReactiveCassandraRepository
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import org.springframework.data.cassandra.repository.Query;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -21,6 +22,9 @@ public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatM
     @Query("SELECT * FROM chat_messages WHERE receiver_id = ?0 AND status = ?1 ALLOW FILTERING")
     Flux<ChatMessage> findByReceiverIdAndStatus(UUID receiverId, String status);
 
-    @Query("SELECT * FROM chat_messages WHERe conversation_id = ?0 AND receiver_id = ?1 AND status = ?2 ALLOW FILTERING")
+    @Query("SELECT * FROM chat_messages WHERE conversation_id = ?0 AND receiver_id = ?1 AND status = ?2 ALLOW FILTERING")
     Flux<ChatMessage> findByConversationIdAndReceiverIdAndStatus(UUID conversationId, UUID receiverId, MessageStatus status);
+
+    @Query("SELECT * FROM chat_messages WHERE conversation_id = ?0 AND message_id = ?1")
+    Mono<ChatMessage> findByConversationIdAndMessageId(UUID conversationId, UUID messageId);
 }

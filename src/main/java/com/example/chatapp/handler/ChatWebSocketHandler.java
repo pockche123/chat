@@ -68,7 +68,6 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
         UUID senderId = jwtUtil.getUserIdFromToken(token);
 
-        
         return LocalOnlineUserService.markUserOnline(senderId)
                         .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);})
                                 .thenMany(
@@ -77,10 +76,6 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                 .flatMap(json -> {
                     try {
                         IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
-                        if(msg.getType().equals("read_receipt")){
-                            return chatMessageService.markDeliveredMessagesAsRead(msg.getConversationId(), msg.getReceiverId());
-                        }
-
                         return chatMessageService.processIncomingMessage(senderId, msg);
                     } catch (Exception e) {
                         log.error("[THREAD: {}] failed to parse JSON: {}",

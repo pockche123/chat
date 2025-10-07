@@ -47,36 +47,38 @@ public class UserRepositoryTest {
 
     @Test
     public void testSaveUser() {
+        String uniqueUsername = "testUser_" + UUID.randomUUID().toString().substring(0, 8);
         User user = new User();
         UUID userId = UUID.randomUUID();
         user.setUserId(userId);
-        user.setUsername("testUser");
+        user.setUsername(uniqueUsername);
         user.setPassword(passwordEncoder.encode("testPassword"));
         user.setUserStatus(UserStatus.ONLINE);
         User savedUser = userRepository.save(user);
 
         assertNotNull(savedUser.getUserId());
-        assertEquals("testUser", savedUser.getUsername());
+        assertEquals(uniqueUsername, savedUser.getUsername());
         assertEquals(UserStatus.ONLINE, savedUser.getUserStatus());
         assertTrue(passwordEncoder.matches("testPassword", savedUser.getPassword()));
     }
 
     @Test
     public void test_findBYUsername_getUser(){
+        String uniqueUsername = "testUser_" + UUID.randomUUID().toString().substring(0, 8);
         User user = new User();
         UUID userId = UUID.randomUUID();
         user.setUserId(userId);
-        user.setUsername("testUser");
+        user.setUsername(uniqueUsername);
         user.setPassword(passwordEncoder.encode("testPassword"));
         user.setUserStatus(UserStatus.ONLINE);
         userRepository.save(user);
 
-        Optional<User> optionalUser = userRepository.findByUsername("testUser");
+        Optional<User> optionalUser = userRepository.findByUsername(uniqueUsername);
         User savedUser = optionalUser.get();
 
 
         assertNotNull(savedUser.getUserId());
-        assertEquals("testUser", savedUser.getUsername());
+        assertEquals(uniqueUsername, savedUser.getUsername());
         assertEquals(UserStatus.ONLINE, savedUser.getUserStatus());
         assertTrue(passwordEncoder.matches("testPassword", savedUser.getPassword()));
     }
