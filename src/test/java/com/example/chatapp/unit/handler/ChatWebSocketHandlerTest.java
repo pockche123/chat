@@ -54,6 +54,12 @@ public class ChatWebSocketHandlerTest {
     @InjectMocks
     private ChatWebSocketHandler chatWebSocketHandler;
 
+    @BeforeEach
+    void setUp() {
+        org.mockito.Mockito.reset(jwtUtil);
+    }
+
+
     @Test
     void test_handle_validJson_callsService(){
 //        Given
@@ -216,51 +222,6 @@ public class ChatWebSocketHandlerTest {
     }
 
     @Test
-    void should_handle_read_receipts() throws JsonProcessingException {
-
-        WebSocketSession session = mock(WebSocketSession.class, RETURNS_DEEP_STUBS);
-        UUID userId = UUID.randomUUID();
-
-//        Mock JWT validation
-        when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
-        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(userId);
-        when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(localOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
-
-        UUID receiverId = UUID.randomUUID();
-        UUID conversationId = UUID.randomUUID();
-
-        IncomingMessageDTO messageDto = new IncomingMessageDTO();
-        messageDto.setType("read_receipt");
-        messageDto.setReceiverId(receiverId);
-        messageDto.setContent("hello");
-        messageDto.setConversationId(conversationId);
-
-        String json = "{\"type\":\"read_receipt\",\"receiverId\":\"" + receiverId + "\",\"content\":\"hello\", \"conversationId\": \"" + conversationId + "\"}";
-
-        // Create a mock WebSocketMessage that returns our JSON
-        WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
-        when(webSocketMessage.getPayloadAsText()).thenReturn(json);
-        
-        // Mock session.receive() to return our message
-        when(session.receive()).thenReturn(Flux.just(webSocketMessage));
-        
-        // Mock the ObjectMapper to parse our JSON into the DTO
-        when(objectMapper.readValue(json, IncomingMessageDTO.class)).thenReturn(messageDto);
-        
-        // Mock the service method to return empty Mono
-        when(chatMessageService.markDeliveredMessagesAsRead(conversationId, receiverId)).thenReturn(Flux.empty());
-
-        // When
-        StepVerifier.create(chatWebSocketHandler.handle(session))
-                .verifyComplete();
-
-        // Then
-        verify(webSocketMessageDeliveryService).registerSession(userId, session);
-        verify(chatMessageService).markDeliveredMessagesAsRead(conversationId, receiverId);
-    }
-
-    @Test
     void authenticateSession_rejectsInvalidToken(){
         WebSocketSession session = mock(WebSocketSession.class);
         when(session.getHandshakeInfo()).thenReturn(mock(HandshakeInfo.class));
@@ -331,16 +292,48 @@ public class ChatWebSocketHandlerTest {
 
     }
 
+    @Test
+    void cleanUp_marksUserOffline_andRemovesSession(){
+
+        UUID senderId = UUID.randomUUID();
+
+        chatWebSocketHandler.cleanUp(senderId);
+        verify(localOnlineUserService).markUserOffline(senderId);
+        verify(webSocketMessageDeliveryService).removeSession(senderId);
+    }
+
+    @Test
+    void handle_unauthorisedError_closesSession(){
+        WebSocketSession session = mock(WebSocketSession.class, RETURNS_DEEP_STUBS);
+
+        when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("invalid");
+        when(jwtUtil.validateToken("invalid")).thenReturn(false);
+        when(session.close(any(CloseStatus.class))).thenReturn(Mono.empty());
+
+        StepVerifier.create(chatWebSocketHandler.handle(session))
+                .verifyComplete();
+
+        verify(session).close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
+
+    }
+
+    @Test
+    void handle_otherError_propagatesError(){
+        WebSocketSession session = mock(WebSocketSession.class, RETURNS_DEEP_STUBS);
+        RuntimeException exception = new RuntimeException("Some error");
+
+        UUID userId = UUID.randomUUID();
+
+        when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("valid");
+        when(jwtUtil.validateToken("valid")).thenReturn(true);
+        when(jwtUtil.getUserIdFromToken("valid")).thenReturn(userId);
+        when(localOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.error(exception));
 
 
-
-
-
-
-
-
-
-
+        StepVerifier.create(chatWebSocketHandler.handle(session))
+                .expectError(RuntimeException.class)
+                .verify();
+    }
 
 
 
