@@ -5,7 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -33,6 +36,16 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
                         return forwardToKafka(message, serverId);
                     }
                 });
+
+    }
+
+    @Override
+    public void registerSession(UUID userId, WebSocketSession session) {
+
+    }
+
+    @Override
+    public void removeSession(UUID userId) {
 
     }
 
