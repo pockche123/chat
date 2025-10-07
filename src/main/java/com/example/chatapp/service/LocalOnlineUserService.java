@@ -2,6 +2,7 @@ package com.example.chatapp.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
+@Primary
 public class LocalOnlineUserService implements OnlineUserService{
 
     private final Set<UUID> onlineChecker = ConcurrentHashMap.newKeySet();

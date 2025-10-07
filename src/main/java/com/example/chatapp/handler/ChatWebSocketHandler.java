@@ -1,13 +1,13 @@
 package com.example.chatapp.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
+import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
-import com.example.chatapp.service.LocalOnlineUserService;
-import com.example.chatapp.service.WebSocketMessageDeliveryService;
+import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.MessageDeliveryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.*;
 import reactor.core.publisher.Mono;
@@ -20,18 +20,26 @@ import java.util.UUID;
 @Component
 public class ChatWebSocketHandler implements WebSocketHandler {
 
-    @Autowired
-    private ChatMessageService chatMessageService;
 
-    @Autowired
-    private  ObjectMapper objectMapper;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private LocalOnlineUserService LocalOnlineUserService;
+    private final ChatMessageService chatMessageService;
 
-    @Autowired
-    private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
+
+    private final ObjectMapper objectMapper;
+
+    private final JwtUtil jwtUtil;
+
+    private final OnlineUserService onlineUserService;
+
+
+    private final MessageDeliveryService messageDeliverService;
+
+    public ChatWebSocketHandler(ChatMessageService chatMessageService, ObjectMapper objectMapper, JwtUtil jwtUtil, OnlineUserService onlineUserService, MessageDeliveryService messageDeliveryService) {
+        this.chatMessageService = chatMessageService;
+        this.objectMapper = objectMapper;
+        this.jwtUtil = jwtUtil;
+        this.onlineUserService = onlineUserService;
+        this.messageDeliverService = messageDeliveryService;
+    }
 
 //    @Override
 //    public Mono<Void> handle(WebSocketSession session) {
@@ -56,40 +64,57 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     @Override
     public Mono<Void> handle(WebSocketSession session) {
 
+     return authenticateSession(session)
+                .flatMap(senderId -> registerSession(senderId, session)
+                        .thenMany(session.receive()
+                                .map(WebSocketMessage::getPayloadAsText)
+                                .flatMap(json -> processIncomingMessage(json, senderId)))
+                        .doFinally(signal -> cleanUp(senderId))
+                        .then())
+                .onErrorResume(error -> {
+                    log.error("Error processing message: {}", error.getMessage());
+                    if (error.getMessage().equals("Unauthorized")) {
+                        return session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
+                    }
+                    return Mono.error(error);
+
+                        });
+    }
+
+    public Mono<UUID> authenticateSession(WebSocketSession session) {
         String token = session.getHandshakeInfo()
                 .getHeaders()
                 .getFirst("Authorization");
-
-        if (!jwtUtil.validateToken(token)) {
-            log.error("[THREAD: {}]  failed to validate token: {}",
-                    Thread.currentThread().getName(), token);
-            return session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
+        if (!jwtUtil.validateToken(token)){
+            log.error("Failed to validate token: {}", token);
+            return Mono.error(new RuntimeException("Unauthorized"));
         }
-
-        UUID senderId = jwtUtil.getUserIdFromToken(token);
-
-        return LocalOnlineUserService.markUserOnline(senderId)
-                        .doOnSuccess((ignored) -> {  webSocketMessageDeliveryService.registerSession(senderId, session);})
-                                .thenMany(
-                session.receive()
-                .map(WebSocketMessage::getPayloadAsText)
-                .flatMap(json -> {
-                    try {
-                        IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
-                        return chatMessageService.processIncomingMessage(senderId, msg);
-                    } catch (Exception e) {
-                        log.error("[THREAD: {}] failed to parse JSON: {}",
-                                Thread.currentThread().getName(),  e.getMessage());
-                        return Mono.error(new RuntimeException("Invalid message format", e));
-                    }
-                }))
-                .doFinally(signal -> {
-                    LocalOnlineUserService.markUserOffline(senderId);
-                    webSocketMessageDeliveryService.removeSession(senderId);
-
-                })
-                .then();
+        return Mono.just(jwtUtil.getUserIdFromToken(token));
     }
+
+
+    public Mono<Void> registerSession(UUID senderId, WebSocketSession session) {
+        return onlineUserService.markUserOnline(senderId)
+                .doOnSuccess((ignored) -> {  messageDeliverService.registerSession(senderId, session);});
+
+    }
+
+    public Mono<ChatMessage> processIncomingMessage(String json, UUID senderId){
+        try {
+            IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
+            return chatMessageService.processIncomingMessage(senderId, msg);
+        } catch (Exception e) {
+            log.error("[THREAD: {}] failed to parse JSON: {}", Thread.currentThread().getName(),  e.getMessage());
+            return Mono.error(new RuntimeException("Invalid message format", e));
+        }
+    }
+
+    public void cleanUp(UUID senderId) {
+        onlineUserService.markUserOffline(senderId);
+        messageDeliverService.removeSession(senderId);
+    }
+}
+
 
 
 //    @Override
@@ -127,4 +152,5 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 //        // Save message, send to broker, etc.
 //        return Mono.empty();
 //    }
-}
+
+
