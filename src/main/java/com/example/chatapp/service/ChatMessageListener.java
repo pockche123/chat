@@ -51,6 +51,8 @@ public class ChatMessageListener {
     @KafkaListener(topics = "chat-messages", groupId = "chat-service")
     public void handleKafkaMessage(ChatMessage message) {
         log.info("Received Kafka message: {}", message);
-        processMessage(message, distributedOnlineUserService, distributedMessageDeliveryService).subscribe();
+        processMessage(message, distributedOnlineUserService, distributedMessageDeliveryService)
+                .doOnError(error -> log.error("Failed to process message: {}", error.getMessage()))
+                .block();
     }
 }
