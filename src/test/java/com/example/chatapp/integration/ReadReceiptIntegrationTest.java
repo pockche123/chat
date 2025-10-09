@@ -120,7 +120,7 @@ public class ReadReceiptIntegrationTest {
 
         chatWebSocketHandler.handle(mockSession).block();
         ChatMessage updatedMessage = chatMessageRepository.findByMessageId(deliveredMessage.getMessageId())
-                .blockFirst();
+                .block();
         assertEquals(MessageStatus.READ, updatedMessage.getStatus());
     }
 

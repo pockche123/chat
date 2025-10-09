@@ -36,7 +36,4 @@ public class RedisServerRegistryService implements  ServerRegistryService {
                 .get("user:server:" + userId)
                 .switchIfEmpty(Mono.just("localhost:8080"));
     }
-
-
-
 }

@@ -58,4 +58,12 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
         }
         return Mono.just(message);
     }
+
+    public int getSessionCount() {
+        return userSessions.size();
+    }
+
+    public boolean hasSession(UUID userId) {
+        return userSessions.containsKey(userId);
+    }
 }
