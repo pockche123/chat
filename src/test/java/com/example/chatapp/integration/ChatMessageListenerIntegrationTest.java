@@ -9,7 +9,6 @@ import com.example.chatapp.service.ChatMessageListener;
 import com.example.chatapp.service.DistributedOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -105,7 +104,7 @@ public class ChatMessageListenerIntegrationTest {
         assertTrue(DistributedOnlineUserService.isUserOnline(userId));
         
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(message.getMessageId())
-                .blockFirst();
+                .block();
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
 
     }
@@ -127,7 +126,7 @@ public class ChatMessageListenerIntegrationTest {
 
         // Message should remain in SENT status since delivery failed
         ChatMessage failedMessage = chatMessageRepository.findByMessageId(message.getMessageId())
-                .blockFirst();
+                .block();
         assertEquals(MessageStatus.SENT, failedMessage.getStatus());
     }
 

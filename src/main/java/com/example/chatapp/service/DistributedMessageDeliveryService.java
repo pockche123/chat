@@ -20,7 +20,7 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
     private final KafkaTemplate kafkaTemplate;
     private final String serverAddress;
 
-    public DistributedMessageDeliveryService(ServerRegistryService serverRegistry, @Value("${server.id:default-server}") String serverId, WebSocketMessageDeliveryService webSocketMessageDeliveryService, KafkaTemplate kafkaTemplate, @Value("server.address") String serverAddress){
+    public DistributedMessageDeliveryService(ServerRegistryService serverRegistry, @Value("${server.id:default-server}") String serverId, WebSocketMessageDeliveryService webSocketMessageDeliveryService, KafkaTemplate kafkaTemplate, @Value("${chat.server.address:localhost:8080}") String serverAddress){
         this.serverRegistry = serverRegistry;
         this.currentServerId = serverId;
         this.webSocketMessageDeliveryService = webSocketMessageDeliveryService;
@@ -63,6 +63,10 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
             log.info("Forwarded message {} via chat-messages topic", message.getMessageId());
             return message;
         });
+    }
+
+    public String getCurrentServerId(){
+        return currentServerId;
     }
 
 }

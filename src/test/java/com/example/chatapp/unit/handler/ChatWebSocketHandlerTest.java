@@ -13,10 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.socket.CloseStatus;
 import org.springframework.web.reactive.socket.HandshakeInfo;
@@ -52,8 +50,6 @@ public class ChatWebSocketHandlerTest {
     @Mock
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
-    @Mock
-    private ServerRegistryService serverRegistryService;
 
 
 

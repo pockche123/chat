@@ -33,13 +33,12 @@ public class ChatMessageRepositoryTest {
 
 //        ACT
         chatMessageRepository.save(msg).block();
-        List<ChatMessage> messages = chatMessageRepository
+       ChatMessage message= chatMessageRepository
                 .findByMessageId(messageId)
-                .collectList()
                 .block();
 //      ASSERT
-        assertEquals(1, messages.size());
-        assertEquals(msg.getContent(), messages.getFirst().getContent());
+
+        assertEquals(msg.getContent(), message.getContent());
 
     }
 }
