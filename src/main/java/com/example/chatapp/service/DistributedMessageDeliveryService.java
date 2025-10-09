@@ -18,12 +18,14 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
     private final String currentServerId;
     private final WebSocketMessageDeliveryService webSocketMessageDeliveryService;
     private final KafkaTemplate kafkaTemplate;
+    private final String serverAddress;
 
-    public DistributedMessageDeliveryService(ServerRegistryService serverRegistry, @Value("${server.id:default-server}") String serverId, WebSocketMessageDeliveryService webSocketMessageDeliveryService, KafkaTemplate kafkaTemplate){
+    public DistributedMessageDeliveryService(ServerRegistryService serverRegistry, @Value("${server.id:default-server}") String serverId, WebSocketMessageDeliveryService webSocketMessageDeliveryService, KafkaTemplate kafkaTemplate, @Value("server.address") String serverAddress){
         this.serverRegistry = serverRegistry;
         this.currentServerId = serverId;
         this.webSocketMessageDeliveryService = webSocketMessageDeliveryService;
         this.kafkaTemplate = kafkaTemplate;
+        this.serverAddress = serverAddress;
     }
 
     @Override
@@ -41,12 +43,14 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
 
     @Override
     public void registerSession(UUID userId, WebSocketSession session) {
-
+        serverRegistry.registerUserServer(userId, serverAddress).subscribe();
+        webSocketMessageDeliveryService.registerSession(userId, session);
     }
 
     @Override
     public void removeSession(UUID userId) {
-
+        serverRegistry.unregisterUser(userId).subscribe();
+        webSocketMessageDeliveryService.removeSession(userId);
     }
 
     public boolean isCurrentServer(String serverId){

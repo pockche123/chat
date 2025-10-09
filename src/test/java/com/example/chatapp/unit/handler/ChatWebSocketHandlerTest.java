@@ -5,6 +5,7 @@ import com.example.chatapp.handler.ChatWebSocketHandler;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.LocalOnlineUserService;
+import com.example.chatapp.service.ServerRegistryService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.socket.CloseStatus;
 import org.springframework.web.reactive.socket.HandshakeInfo;
@@ -50,14 +52,25 @@ public class ChatWebSocketHandlerTest {
     @Mock
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
-    @InjectMocks
+    @Mock
+    private ServerRegistryService serverRegistryService;
+
+
+
+
     private ChatWebSocketHandler chatWebSocketHandler;
 
     @BeforeEach
     void setUp() {
+        chatWebSocketHandler = new ChatWebSocketHandler(
+                chatMessageService,
+                objectMapper,
+                jwtUtil,
+                localOnlineUserService,
+                webSocketMessageDeliveryService
+        );
         org.mockito.Mockito.reset(jwtUtil);
     }
-
 
     @Test
     void test_handle_validJson_callsService(){
@@ -333,5 +346,7 @@ public class ChatWebSocketHandlerTest {
                 .expectError(RuntimeException.class)
                 .verify();
     }
+
+
 
 }
