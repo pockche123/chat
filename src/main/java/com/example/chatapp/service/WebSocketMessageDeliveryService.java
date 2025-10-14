@@ -44,6 +44,7 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
                 message.getContent(), message.getReceiverId());
 
         WebSocketSession session = userSessions.get(message.getReceiverId());
+        log.info("HERE NOW!");
         if (session != null && session.isOpen()) {
             return Mono.fromCallable(() -> objectMapper.writeValueAsString(message))
                     .map(session::textMessage)
@@ -57,5 +58,13 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
                     });
         }
         return Mono.just(message);
+    }
+
+    public int getSessionCount() {
+        return userSessions.size();
+    }
+
+    public boolean hasSession(UUID userId) {
+        return userSessions.containsKey(userId);
     }
 }

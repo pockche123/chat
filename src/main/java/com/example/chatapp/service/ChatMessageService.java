@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Slf4j
@@ -18,23 +19,19 @@ import java.util.UUID;
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
+    private final KafkaMessageQueueService messageQueueService;
     private final MessageProcessorFactory messageProcessorFactory;
 
-    public ChatMessageService(ChatMessageRepository chatMessageRepository, MessageProcessorFactory messageProcessorFactory) {
+    public ChatMessageService(ChatMessageRepository chatMessageRepository, KafkaMessageQueueService messageQueueService, MessageProcessorFactory messageProcessorFactory) {
         this.chatMessageRepository = chatMessageRepository;
+        this.messageQueueService = messageQueueService;
         this.messageProcessorFactory = messageProcessorFactory;
     }
 
-
     public Mono<ChatMessage> processIncomingMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
-        MessageProcessingStrategy processor = messageProcessorFactory.getProcessor(incomingMessageDTO.getType());
-        return processor.processMessage(senderId, incomingMessageDTO)
-                .doOnSuccess(saved -> log.info("[THREAD: {}] Saved chat message: {}",
-                        Thread.currentThread().getName(), saved.getMessageId()))
-                .doOnError(error -> log.error("[THREAD: {}] Error processing message: {}",
-                        Thread.currentThread().getName(), error.getMessage()));
+        MessageProcessingStrategy strategy = messageProcessorFactory.getProcessor(incomingMessageDTO.getType());
+        return strategy.processMessage(senderId, incomingMessageDTO);
     }
-
 
     public Flux<ChatMessage> markDeliveredMessagesAsRead(UUID conversationId, UUID receiverId) {
         return chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)
@@ -43,6 +40,4 @@ public class ChatMessageService {
                     return chatMessageRepository.save(message);
                 });
     }
-
-
 }
