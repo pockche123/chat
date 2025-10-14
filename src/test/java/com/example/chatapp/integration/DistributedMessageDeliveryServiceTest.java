@@ -7,12 +7,13 @@ import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.DistributedMessageDeliveryService;
 import com.example.chatapp.service.RedisServerRegistryService;
-import com.example.chatapp.service.ServerRegistryService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -34,13 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
+@EmbeddedKafka(partitions = 16, topics = {"chat-messages"})
 @Testcontainers
 @Slf4j
 public class DistributedMessageDeliveryServiceTest {
@@ -64,6 +64,9 @@ public class DistributedMessageDeliveryServiceTest {
     @Autowired
     private RedisServerRegistryService redisServerRegistryService;
 
+    @MockitoBean
+    private KafkaTemplate kafkaTemplate;
+
     @Autowired
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
@@ -84,7 +87,6 @@ public class DistributedMessageDeliveryServiceTest {
         when(mockSession.send(any())).thenReturn(Mono.empty());
 
         ChatMessage message = createUndeliveredMessage(messageId, senderId, receiverId);
-        chatMessageRepository.save(message).block();
 
         webSocketMessageDeliveryService.registerSession(receiverId, mockSession);
         redisServerRegistryService.registerUserServer(receiverId,  serveraddress).block();
@@ -97,6 +99,23 @@ public class DistributedMessageDeliveryServiceTest {
         assertNotNull(updatedMessage);
         assertEquals(MessageStatus.DELIVERED, updatedMessage.getStatus());
     }
+
+    @Test
+    void distributedMessageFlow_routesMessagesCorrectlyToDistributed(){
+        UUID messageId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+        UUID senderId = UUID.randomUUID();
+        ChatMessage message = createUndeliveredMessage(messageId, senderId, receiverId);
+        String serveraddress = "localhost:8082";
+
+
+        redisServerRegistryService.registerUserServer(receiverId,  serveraddress).block();
+        distributedMessageDeliveryService.deliverMessage(message).block();
+
+        verify(kafkaTemplate).send(eq("chat-messages"), anyInt(), eq(receiverId.toString()), eq(message));
+    }
+
+
 
     private ChatMessage createUndeliveredMessage(UUID messageId, UUID senderId, UUID receiverId){
         ChatMessage message = new ChatMessage();

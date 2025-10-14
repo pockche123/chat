@@ -20,7 +20,8 @@ public class ReadMessageProcessor implements MessageProcessingStrategy {
 
     @Override
     public Mono<ChatMessage> processMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
-        return chatMessageRepository.findByConversationIdAndMessageId(incomingMessageDTO.getConversationId(), incomingMessageDTO.getMessageId())
+
+        return chatMessageRepository.findByMessageId(incomingMessageDTO.getMessageId())
                 .flatMap(message -> {
                     if(message.getStatus() == MessageStatus.DELIVERED) {
                         message.setStatus(MessageStatus.READ);

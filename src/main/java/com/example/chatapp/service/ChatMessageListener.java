@@ -55,6 +55,6 @@ public class ChatMessageListener {
         log.info("Received Kafka message: {}", message);
         processMessage(message, onlineUserService, messageDeliveryService)
                 .doOnError(error -> log.error("Failed to process message: {}", error.getMessage()))
-                .block();
+                .block(); // make this non-blocking() for async message handling
     }
 }

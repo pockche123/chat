@@ -5,12 +5,11 @@ CREATE KEYSPACE IF NOT EXISTS chatapp_test
 USE chatapp_test;
 
 CREATE TABLE IF NOT EXISTS chat_messages (
-                                             message_id uuid,
-                                             conversation_id uuid,
-                                             timestamp timestamp,
-                                             sender_id uuid,
-                                             receiver_id uuid,
-                                             content text,
-                                             status text,
-                                             PRIMARY KEY ((conversation_id), timestamp, message_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC);
+    message_id uuid PRIMARY KEY,
+    conversation_id uuid,
+    timestamp timestamp,
+    sender_id uuid,
+    receiver_id uuid,
+    content text,
+    status text
+);

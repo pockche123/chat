@@ -38,7 +38,6 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
                         return forwardToKafka(message, serverId);
                     }
                 });
-
     }
 
     @Override
@@ -59,7 +58,8 @@ public class DistributedMessageDeliveryService implements  MessageDeliveryServic
 
     private Mono<ChatMessage> forwardToKafka(ChatMessage message, String serverId){
         return Mono.fromCallable(() -> {
-            kafkaTemplate.send("chat-messages", message.getReceiverId().toString(), message);
+            int partition = Math.abs(message.getReceiverId().hashCode()) % 16;
+            kafkaTemplate.send("chat-messages", partition, message.getReceiverId().toString(), message);
             log.info("Forwarded message {} via chat-messages topic", message.getMessageId());
             return message;
         });

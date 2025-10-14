@@ -62,7 +62,7 @@ public class DistributedMessageDeliveryServiceTest {
 
         distributedMessageDeliveryService.deliverMessage(message).block();
 
-        verify(kafkaTemplate).send("chat-messages", message.getReceiverId().toString(), message);
+        verify(kafkaTemplate).send(eq("chat-messages"), anyInt(), eq(message.getReceiverId().toString()), eq(message));
         verify(webSocketMessageDeliveryService, never()).deliverMessage(message);
 
     }

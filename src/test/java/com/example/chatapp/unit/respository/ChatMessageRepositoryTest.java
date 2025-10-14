@@ -13,7 +13,9 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 @DataCassandraTest
 public class ChatMessageRepositoryTest {
@@ -29,7 +31,7 @@ public class ChatMessageRepositoryTest {
         UUID conversationId = UUID.randomUUID();
         UUID senderId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
-        ChatMessage msg = new ChatMessage(conversationId, new Timestamp(System.currentTimeMillis()), messageId, "Hello", senderId, receiverId, MessageStatus.SENT);
+        ChatMessage msg = new ChatMessage(messageId, new Timestamp(System.currentTimeMillis()), conversationId, "Hello", senderId, receiverId, MessageStatus.SENT);
 
 //        ACT
         chatMessageRepository.save(msg).block();
