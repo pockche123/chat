@@ -89,7 +89,7 @@ public class LocalOnlineUserServiceIntegrationTest {
         localOnlineUserService.markUserOnline(userId).block();
 //        assert
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(undeliveredMessage.getMessageId())
-                .blockFirst();
+                .block();
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
     }
 

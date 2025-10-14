@@ -5,12 +5,10 @@ import com.example.chatapp.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -19,6 +17,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class DistributedMessageDeliveryServiceTest {
+
+    private final String serverAddress = "localhost:8080";
 
     @Mock
     private ServerRegistryService serverRegistry;
@@ -29,12 +29,11 @@ public class DistributedMessageDeliveryServiceTest {
     @Mock
     private KafkaTemplate kafkaTemplate;
 
-    @InjectMocks
     private DistributedMessageDeliveryService distributedMessageDeliveryService;
 
     @BeforeEach
     void setUp() {
-        distributedMessageDeliveryService = new DistributedMessageDeliveryService(serverRegistry, "server-1", webSocketMessageDeliveryService, kafkaTemplate);
+        distributedMessageDeliveryService = new DistributedMessageDeliveryService(serverRegistry, "server-1", webSocketMessageDeliveryService, kafkaTemplate, serverAddress);
     }
 
 
@@ -63,8 +62,35 @@ public class DistributedMessageDeliveryServiceTest {
 
         distributedMessageDeliveryService.deliverMessage(message).block();
 
-        verify(kafkaTemplate).send("chat-messages", message.getReceiverId().toString(), message);
+        verify(kafkaTemplate).send(eq("chat-messages"), anyInt(), eq(message.getReceiverId().toString()), eq(message));
         verify(webSocketMessageDeliveryService, never()).deliverMessage(message);
 
     }
+
+    @Test
+    void registerSession_registersUserServerandRegistersLocally(){
+        UUID senderId = UUID.randomUUID();
+        WebSocketSession mockSession = mock(WebSocketSession.class);
+        when(serverRegistry.registerUserServer(senderId, serverAddress)).thenReturn(Mono.empty());
+
+
+        distributedMessageDeliveryService.registerSession(senderId, mockSession);
+
+        verify(serverRegistry).registerUserServer(senderId, serverAddress);
+        verify(webSocketMessageDeliveryService).registerSession(senderId, mockSession);
+    }
+
+    @Test
+    void removesSession_removesFromRegistry(){
+        UUID userId = UUID.randomUUID();
+
+        when(serverRegistry.unregisterUser(userId)).thenReturn(Mono.empty());
+
+        distributedMessageDeliveryService.removeSession(userId);
+
+        verify(serverRegistry).unregisterUser(userId);
+        verify(webSocketMessageDeliveryService).removeSession(userId);
+    }
+
+
 }

@@ -5,9 +5,11 @@ import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.service.ChatMessageService;
 import com.example.chatapp.service.OnlineUserService;
 import com.example.chatapp.service.MessageDeliveryService;
+import com.example.chatapp.service.ServerRegistryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.*;
 import reactor.core.publisher.Mono;
@@ -29,7 +31,6 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private final JwtUtil jwtUtil;
 
     private final OnlineUserService onlineUserService;
-
 
     private final MessageDeliveryService messageDeliverService;
 

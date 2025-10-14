@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.cassandra.core.cql.Ordering;
 import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
 import org.springframework.data.cassandra.core.mapping.*;
 
@@ -17,19 +16,20 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessage {
-    @PrimaryKeyColumn(name = "conversation_id", type= PrimaryKeyType.PARTITIONED)
-    private UUID conversationId;
-    @PrimaryKeyColumn(name = "timestamp", type=PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
-    private Timestamp timestamp;
-    @PrimaryKeyColumn(name = "message_id", type=PrimaryKeyType.CLUSTERED)
+    @PrimaryKeyColumn(name = "message_id", type= PrimaryKeyType.PARTITIONED)
     private UUID messageId;
-
+    private Timestamp timestamp;
+    @Indexed
+    @Column("conversation_id")
+    private UUID conversationId;
     private String content;
     @Column("sender_id")
     private UUID senderId;
     @Column("receiver_id")
+    @Indexed
     private UUID receiverId;
     @Column("status")
+    @Indexed
     private MessageStatus status = MessageStatus.CREATED;
 
 

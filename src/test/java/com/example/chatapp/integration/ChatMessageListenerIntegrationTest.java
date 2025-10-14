@@ -7,9 +7,9 @@ import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.ChatMessageListener;
 import com.example.chatapp.service.DistributedOnlineUserService;
+import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,8 +62,9 @@ public class ChatMessageListenerIntegrationTest {
         CassandraTestConfig.configureCassandra(registry, cassandra);
     }
 
+
     @Autowired
-    private DistributedOnlineUserService DistributedOnlineUserService;
+    private LocalOnlineUserService localOnlineUserService;
 
     @Autowired
     private ChatMessageListener chatMessageListener;
@@ -84,14 +85,11 @@ public class ChatMessageListenerIntegrationTest {
         UUID userId = UUID.randomUUID();
         ChatMessage message = createMessage(userId);
 
-        redisTemplate.opsForValue()
-                .set("user:server:" + userId, "localhost:8080")
-                .block();
 
 
         chatMessageRepository.save(message).block();
 
-        DistributedOnlineUserService.markUserOnline(userId).block();
+        localOnlineUserService.markUserOnline(userId).block();
         WebSocketSession mockSession = createSession();
 
 
@@ -102,10 +100,10 @@ public class ChatMessageListenerIntegrationTest {
         chatMessageListener.handleKafkaMessage(message);
 
         // Assert - delivery should be complete
-        assertTrue(DistributedOnlineUserService.isUserOnline(userId));
+        assertTrue(localOnlineUserService.isUserOnline(userId));
         
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(message.getMessageId())
-                .blockFirst();
+                .block();
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());
 
     }
@@ -116,7 +114,7 @@ public class ChatMessageListenerIntegrationTest {
         ChatMessage message = createMessage(userId);
         chatMessageRepository.save(message).block();
 
-        DistributedOnlineUserService.markUserOnline(userId).block();
+        localOnlineUserService.markUserOnline(userId).block();
 
         // Create a mock session that will cause delivery to fail
         WebSocketSession mockSession = mock(WebSocketSession.class);
@@ -127,9 +125,10 @@ public class ChatMessageListenerIntegrationTest {
 
         // Message should remain in SENT status since delivery failed
         ChatMessage failedMessage = chatMessageRepository.findByMessageId(message.getMessageId())
-                .blockFirst();
+                .block();
         assertEquals(MessageStatus.SENT, failedMessage.getStatus());
     }
+
 
     private ChatMessage createMessage(UUID receiverId){
         ChatMessage message = new ChatMessage();

@@ -23,7 +23,8 @@ Things to work on:
 - using redis for online status
 - using Kafka for multi-server message sync queue. 
 - kubernetes config
-- sonar checks
+- for mediatype using pre-signed url 
+- group chats 
 
 ## Next Logical Step:
 Enhance your existing services to actually use Redis and Kafka properly.
@@ -37,10 +38,20 @@ Which would you like to tackle first?
 2. Kafka: Add a consumer to receive messages from other servers
 
 
+What to focus on next:
 
-1. Strategy Pattern for notification services (Firebase, Logging, etc.)
-2. Factory Pattern for creating message processors
-3. Observer Pattern for message events
-4. Command Pattern for message operations
+1. Add write methods to RedisServerRegistryService:
+   java
+   public Mono<Void> registerUserServer(UUID userId, String serverAddress)
+   public Mono<Void> unregisterUser(UUID userId)
 
-5. handle() too long in ChatWebSocketHandler 
+
+2. Call them from your WebSocket handler:
+   • When user connects → register in Redis
+   • When user disconnects → remove from Redis
+
+3. Update DistributedMessageDeliveryService:
+   • Implement the empty registerSession() and removeSession() methods
+   • They should call the Redis methods
+
+Once Redis tracking works, your distributed message routing will actually function correctly instead of always defaulting to localhost.

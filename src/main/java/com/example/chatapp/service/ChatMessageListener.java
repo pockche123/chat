@@ -3,7 +3,6 @@ package com.example.chatapp.service;
 
 import com.example.chatapp.model.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -13,14 +12,17 @@ import reactor.core.publisher.Mono;
 public class ChatMessageListener {
 
 
-    @Autowired
-    private DistributedMessageDeliveryService distributedMessageDeliveryService;
+    private final MessageDeliveryService messageDeliveryService;
+    private final PushNotificationService pushNotificationService;
+    private final OnlineUserService onlineUserService;
 
-    @Autowired
-    private FirebasePushNotificationService pushNotificationService;
-
-    @Autowired
-    private DistributedOnlineUserService distributedOnlineUserService;
+    public ChatMessageListener(MessageDeliveryService messageDeliveryService, 
+                              PushNotificationService pushNotificationService, 
+                              OnlineUserService onlineUserService) {
+        this.messageDeliveryService = messageDeliveryService;
+        this.pushNotificationService = pushNotificationService;
+        this.onlineUserService = onlineUserService;
+    }
 
 
     private Mono<Void> processMessage(ChatMessage message, OnlineUserService onlineUserService, MessageDeliveryService messageDeliveryService){
@@ -51,8 +53,8 @@ public class ChatMessageListener {
     @KafkaListener(topics = "chat-messages", groupId = "chat-service")
     public void handleKafkaMessage(ChatMessage message) {
         log.info("Received Kafka message: {}", message);
-        processMessage(message, distributedOnlineUserService, distributedMessageDeliveryService)
+        processMessage(message, onlineUserService, messageDeliveryService)
                 .doOnError(error -> log.error("Failed to process message: {}", error.getMessage()))
-                .block();
+                .block(); // make this non-blocking() for async message handling
     }
 }
