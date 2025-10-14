@@ -9,7 +9,8 @@ public class CassandraTestConfig {
     public static CassandraContainer<?> createCassandraContainer() {
         return new CassandraContainer<>("cassandra:3.11")
                 .withInitScript("init-keyspace.cql")
-                .withStartupTimeout(Duration.ofMinutes(3));
+                .withStartupTimeout(Duration.ofMinutes(5))
+                .waitingFor(org.testcontainers.containers.wait.strategy.Wait.forListeningPort());
     }
     
     public static void configureCassandra(DynamicPropertyRegistry registry, CassandraContainer<?> cassandra) {

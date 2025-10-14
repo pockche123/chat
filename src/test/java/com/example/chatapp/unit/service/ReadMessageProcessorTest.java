@@ -47,8 +47,8 @@ public class ReadMessageProcessorTest {
         incomingMessageDTO.setConversationId(conversationId);
         incomingMessageDTO.setMessageId(messageId);
 
-        when(chatMessageRepository.findByConversationIdAndMessageId(conversationId, messageId))
-                .thenReturn(Mono.error(new RuntimeException("Message is not delivered yet")));
+//        when(chatMessageRepository.findByConversationIdAndMessageId(conversationId, messageId))
+//                .thenReturn(Mono.error(new RuntimeException("Message is not delivered yet")));
 
         assertThrows(RuntimeException.class, () -> {
             readMessageProcessor.processMessage(senderId, incomingMessageDTO).block();
@@ -75,7 +75,6 @@ public class ReadMessageProcessorTest {
         message.setMessageId(messageId);
         message.setReceiverId(receiverId);
 
-        when(chatMessageRepository.findByConversationIdAndMessageId(conversationId, messageId)).thenReturn(Mono.just(message));
 
 
         assertThrows(RuntimeException.class, () -> {

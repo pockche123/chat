@@ -24,6 +24,7 @@ Things to work on:
 - using Kafka for multi-server message sync queue. 
 - kubernetes config
 - for mediatype using pre-signed url 
+- group chats 
 
 ## Next Logical Step:
 Enhance your existing services to actually use Redis and Kafka properly.

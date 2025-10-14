@@ -44,6 +44,7 @@ public class WebSocketMessageDeliveryService implements MessageDeliveryService {
                 message.getContent(), message.getReceiverId());
 
         WebSocketSession session = userSessions.get(message.getReceiverId());
+        log.info("HERE NOW!");
         if (session != null && session.isOpen()) {
             return Mono.fromCallable(() -> objectMapper.writeValueAsString(message))
                     .map(session::textMessage)
