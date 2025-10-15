@@ -107,7 +107,7 @@ public class ChatWebSocketHandlerTest {
             throw new RuntimeException(e);
         }
 
-        when(chatMessageService.processIncomingMessage(any(UUID.class), any(IncomingMessageDTO.class))).thenReturn(Mono.just(chatMessage));
+        when(chatMessageService.processIncomingMessage(any(UUID.class), any(IncomingMessageDTO.class))).thenReturn(Flux.just(chatMessage));
         when(localOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
@@ -278,10 +278,10 @@ public class ChatWebSocketHandlerTest {
         UUID senderId = UUID.randomUUID();
         ChatMessage expectedMessage = new ChatMessage();
         when(objectMapper.readValue(anyString(), eq(IncomingMessageDTO.class))).thenReturn(incomingMessageDTO);
-        when(chatMessageService.processIncomingMessage(senderId, incomingMessageDTO)).thenReturn(Mono.just(expectedMessage));
+        when(chatMessageService.processIncomingMessage(senderId, incomingMessageDTO)).thenReturn(Flux.just(expectedMessage));
 
 
-        Mono<ChatMessage> result = chatWebSocketHandler.processIncomingMessage(json, senderId);
+        Mono<ChatMessage> result = chatWebSocketHandler.processIncomingMessage(json, senderId).next();
 
         StepVerifier.create(result)
                 .expectNext(expectedMessage)

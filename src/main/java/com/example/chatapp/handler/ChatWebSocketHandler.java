@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -100,13 +101,13 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
     }
 
-    public Mono<ChatMessage> processIncomingMessage(String json, UUID senderId){
+    public Flux<ChatMessage> processIncomingMessage(String json, UUID senderId){
         try {
             IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
             return chatMessageService.processIncomingMessage(senderId, msg);
         } catch (Exception e) {
             log.error("[THREAD: {}] failed to parse JSON: {}", Thread.currentThread().getName(),  e.getMessage());
-            return Mono.error(new RuntimeException("Invalid message format", e));
+            return Flux.error(new RuntimeException("Invalid message format", e));
         }
     }
 

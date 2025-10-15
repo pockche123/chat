@@ -51,7 +51,7 @@ public class ReadMessageProcessorTest {
 //                .thenReturn(Mono.error(new RuntimeException("Message is not delivered yet")));
 
         assertThrows(RuntimeException.class, () -> {
-            readMessageProcessor.processMessage(senderId, incomingMessageDTO).block();
+            readMessageProcessor.processMessages(senderId, incomingMessageDTO).blockFirst();
         });
     }
 
@@ -78,7 +78,7 @@ public class ReadMessageProcessorTest {
 
 
         assertThrows(RuntimeException.class, () -> {
-            readMessageProcessor.processMessage(senderId, incomingMessageDTO).block();
+            readMessageProcessor.processMessages(senderId, incomingMessageDTO).blockFirst();
         });
 
     }
