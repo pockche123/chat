@@ -53,7 +53,7 @@ public class TextMessageProcessorTest {
         Mockito.when(chatMessageRepository.save(any(ChatMessage.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        ChatMessage actual = textMessageProcessor.processMessage(senderId, incomingMessageDTO).block();
+        ChatMessage actual = textMessageProcessor.processMessages(senderId, incomingMessageDTO).blockFirst();
 
         assertNotNull(actual);
         verify(kafkaMessageQueueService).enqueueMessage(actual);

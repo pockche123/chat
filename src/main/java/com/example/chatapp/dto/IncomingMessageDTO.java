@@ -1,6 +1,12 @@
 package com.example.chatapp.dto;
 
-import lombok.*;
+
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 

@@ -7,6 +7,7 @@ import com.example.chatapp.repository.ChatMessageRepository;
 import com.example.chatapp.service.KafkaMessageQueueService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.sql.Timestamp;
@@ -25,7 +26,7 @@ public class TextMessageProcessor implements MessageProcessingStrategy{
     }
 
     @Override
-    public Mono<ChatMessage> processMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
+    public Flux<ChatMessage> processMessages(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
         log.info("[THREAD: {}] Processing message from {} to {}",
                 Thread.currentThread().getName(),
                 senderId,
@@ -45,15 +46,16 @@ public class TextMessageProcessor implements MessageProcessingStrategy{
 
         log.info("[THREAD: {}] Saving message with ID: {}",
                 Thread.currentThread().getName(), chatMessage.getMessageId());
-
-        return chatMessageRepository.save(chatMessage)
-                .doOnSuccess(saved -> {
-                    log.info("[THREAD: {}] Saved chat message: {}",
-                            Thread.currentThread().getName(), saved.getMessageId());
-
-                    // Step 3: Send to message sync queue);
-                    messageQueueService.enqueueMessage(saved);
-                });
+        return null;
+//
+//        return chatMessageRepository.save(chatMessage)
+//                .doOnSuccess(saved -> {
+//                    log.info("[THREAD: {}] Saved chat message: {}",
+//                            Thread.currentThread().getName(), saved.getMessageId());
+//
+//                    // Step 3: Send to message sync queue);
+//                    messageQueueService.enqueueMessage(saved);
+//                });
     }
 
 
