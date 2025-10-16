@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface MessageProcessingStrategy  {
 
-    Flux<ChatMessage> processMessages(UUID senderId, IncomingMessageDTO incomingMessageDTO);
+    Flux<ChatMessage> processMessages(UUID currentUserId, IncomingMessageDTO incomingMessageDTO);
     boolean canHandle(String messageType);
 
 }
