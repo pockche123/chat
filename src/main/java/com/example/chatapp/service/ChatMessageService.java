@@ -39,9 +39,9 @@ public class ChatMessageService {
         this.directConversationRepository = directConversationRepository;
     }
 
-    public Flux<ChatMessage> processIncomingMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
+    public Flux<ChatMessage> processIncomingMessage(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
         MessageProcessingStrategy strategy = messageProcessorFactory.getProcessor(incomingMessageDTO.getType());
-        return strategy.processMessages(senderId, incomingMessageDTO);
+        return strategy.processMessages(currentUserId, incomingMessageDTO);
     }
 
     public Flux<ChatMessage> markDeliveredMessagesAsRead(UUID conversationId, UUID receiverId) {
@@ -52,15 +52,15 @@ public class ChatMessageService {
                 });
     }
 
-    public Mono<List<UUID>> getReceivers(UUID conversationId, UUID senderId) {
+    public Mono<List<UUID>> getReceivers(UUID conversationId, UUID currentUserId) {
         return groupRepository.findById(conversationId)
                 .map(group ->
                         group.getMemberIds().stream()
-                                .filter(memberId -> !memberId.equals(senderId))
+                                .filter(memberId -> !memberId.equals(currentUserId))
                                 .collect(Collectors.toList())
                         )
                 .switchIfEmpty(
-                        directConversationService.getOtherParticipant(conversationId, senderId)
+                        directConversationService.getOtherParticipant(conversationId, currentUserId)
                                 .map(List::of)
                 );
     }
