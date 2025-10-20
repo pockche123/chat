@@ -53,7 +53,6 @@ public class TextMessageProcessorTest {
         UUID senderId = UUID.randomUUID();
         UUID conversationId = UUID.randomUUID();
         IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
-        incomingMessageDTO.setReceiverId(receiverId);
         incomingMessageDTO.setConversationId(conversationId);
         incomingMessageDTO.setContent("Hello world!");
 
