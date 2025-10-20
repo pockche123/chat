@@ -78,23 +78,5 @@ public class ChatMessageServiceIntegrationTest {
 //
 //    }
 
-    @Test
-    void should_returnReceiverFromDirect_whenConversationIsNotInGroup(){
-        UUID conversationId = UUID.randomUUID();
-        UUID senderId = UUID.randomUUID();
-        UUID receiverId = UUID.randomUUID();
-        String content = "Hello world!";
-        UUID messageId = UUID.randomUUID();
 
-        DirectConversation direct = new DirectConversation();
-        direct.setConversationId(conversationId);
-        direct.setParticipant1(senderId);
-        direct.setParticipant2(receiverId);
-        directConversationRepository.save(direct).block();
-
-        List<UUID> receivers = chatMessageService.getReceivers(conversationId, senderId).block();
-
-        assertEquals(1, receivers.size());
-        assertEquals(receiverId, receivers.get(0));
-    }
 }

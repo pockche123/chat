@@ -20,19 +20,12 @@ public class ReadMessageProcessor implements MessageProcessingStrategy {
     }
 
     @Override
-    public Flux<ChatMessage> processMessages(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
-        return null;
-//        return chatMessageRepository.findByMessageId(incomingMessageDTO.getMessageId())
-//                .flatMap(message -> {
-//                    if(message.getStatus() == MessageStatus.DELIVERED) {
-//                        message.setStatus(MessageStatus.READ);
-//                        return chatMessageRepository.save(message);
-//                    } else if(message.getStatus() == MessageStatus.READ) {
-//                        return Mono.just(message);
-//                    } else{
-//                        return Mono.error(new RuntimeException("Message is not delivered yet"));
-//                    }
-//                });
+    public Flux<ChatMessage> processMessages(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
+        return chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(incomingMessageDTO.getConversationId(), currentUserId, MessageStatus.DELIVERED)
+                .flatMap(message -> {
+                   message.setStatus(MessageStatus.READ);
+                   return chatMessageRepository.save(message);
+                });
     }
 
     @Override

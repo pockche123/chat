@@ -3,6 +3,7 @@ package com.example.chatapp.unit.service;
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.repository.ChatMessageRepository;
+import com.example.chatapp.service.ConversationService;
 import com.example.chatapp.service.KafkaMessageQueueService;
 import com.example.chatapp.service.messageprocessor.TextMessageProcessor;
 import org.junit.jupiter.api.Test;
@@ -12,13 +13,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+import static org.mockito.Mockito.when;  // CHANGE THIS LINE!
 
+
+
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static reactor.core.publisher.Mono.when;
+
 
 @ExtendWith(MockitoExtension.class)
 public class TextMessageProcessorTest {
@@ -28,6 +33,9 @@ public class TextMessageProcessorTest {
 
     @Mock
     private ChatMessageRepository chatMessageRepository;
+
+    @Mock
+    private ConversationService conversationService;
 
     @InjectMocks
     private TextMessageProcessor textMessageProcessor;
@@ -40,7 +48,7 @@ public class TextMessageProcessorTest {
     }
 
     @Test
-    void  processMessage_returnsMonoOfChatMessage(){
+    void  processMessages_returnsFluxOfChatMessage(){
         UUID receiverId = UUID.randomUUID();
         UUID senderId = UUID.randomUUID();
         UUID conversationId = UUID.randomUUID();
@@ -48,6 +56,9 @@ public class TextMessageProcessorTest {
         incomingMessageDTO.setReceiverId(receiverId);
         incomingMessageDTO.setConversationId(conversationId);
         incomingMessageDTO.setContent("Hello world!");
+
+        List<UUID> uuids = List.of(receiverId);
+        when(conversationService.getReceivers(conversationId, senderId)).thenReturn(Mono.just(uuids));
 
 
         Mockito.when(chatMessageRepository.save(any(ChatMessage.class)))

@@ -10,7 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
@@ -81,5 +83,53 @@ public class ReadMessageProcessorTest {
             readMessageProcessor.processMessages(senderId, incomingMessageDTO).blockFirst();
         });
 
+    }
+
+    @Test
+    void processMessages_changesChatMessageToRead(){
+        UUID conversationId = UUID.randomUUID();
+        UUID messageId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+
+        ChatMessage mockMessage = new ChatMessage();
+        mockMessage.setConversationId(conversationId);
+        mockMessage.setMessageId(messageId);
+        mockMessage.setReceiverId(receiverId);
+        mockMessage.setStatus(MessageStatus.DELIVERED);
+
+
+
+        IncomingMessageDTO incomingMessageDTO= new IncomingMessageDTO();
+        incomingMessageDTO.setType("read_receipt");
+        incomingMessageDTO.setConversationId(conversationId);
+        incomingMessageDTO.setMessageId(messageId);
+
+        when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)).thenReturn(Flux.just(mockMessage));
+        when(chatMessageRepository.save(any(ChatMessage.class)))
+                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+
+        StepVerifier.create(readMessageProcessor.processMessages(receiverId, incomingMessageDTO))
+                .assertNext(chatMessage -> {
+                    assertEquals(MessageStatus.READ, chatMessage.getStatus());
+                        }
+                ).verifyComplete();
+
+    }
+
+    @Test
+    void processMessages_throwsError_whenRepositoryFails(){
+        UUID conversationId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+
+        IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
+        incomingMessageDTO.setType("read_receipt");
+        incomingMessageDTO.setConversationId(conversationId);
+
+        when(chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED))
+                .thenReturn(Flux.error(new RuntimeException("Database error")));
+
+        StepVerifier.create(readMessageProcessor.processMessages(receiverId, incomingMessageDTO))
+                .verifyError(RuntimeException.class);
     }
 }
