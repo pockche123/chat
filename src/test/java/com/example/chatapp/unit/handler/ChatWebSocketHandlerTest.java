@@ -74,7 +74,7 @@ public class ChatWebSocketHandlerTest {
         WebSocketSession session = mock(WebSocketSession.class);
         IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
 
-        incomingMessageDTO.setReceiverId(UUID.randomUUID());
+
         incomingMessageDTO.setContent("Hello World!");
         UUID senderId = UUID.randomUUID();
         
@@ -89,10 +89,9 @@ public class ChatWebSocketHandlerTest {
 
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setSenderId(senderId);
-        chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
         chatMessage.setContent(incomingMessageDTO.getContent());
 
-        String json = "{\"receiverId\":\"" + incomingMessageDTO.getReceiverId() + "\",\"content\":\"Hello World!\"}";
+        String json = "{\"receiverId: mockID, content\":\"Hello World!\"}";
 
         WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
         when(webSocketMessage.getPayloadAsText()).thenReturn(json);

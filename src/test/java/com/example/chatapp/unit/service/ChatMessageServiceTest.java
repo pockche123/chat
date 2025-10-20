@@ -63,7 +63,7 @@ public class ChatMessageServiceTest {
         // Given
         IncomingMessageDTO processIncomingMessageDTO = new IncomingMessageDTO();
         processIncomingMessageDTO.setContent("Hello World!");
-        processIncomingMessageDTO.setReceiverId(UUID.randomUUID());
+
         UUID senderId = UUID.randomUUID();
 
 

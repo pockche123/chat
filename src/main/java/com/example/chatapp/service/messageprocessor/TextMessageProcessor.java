@@ -46,11 +46,11 @@ public class TextMessageProcessor implements MessageProcessingStrategy{
         log.info("[THREAD: {}] Processing message from {} to {}",
                 Thread.currentThread().getName(),
                 senderId,
-                incomingMessageDTO.getReceiverId());
+                receiverId);
         ChatMessage chatMessage = new ChatMessage();
 
         if(incomingMessageDTO.getConversationId() == null) {
-            chatMessage.setConversationId(generateConversationId(senderId, incomingMessageDTO.getReceiverId()));
+            chatMessage.setConversationId(generateConversationId(senderId, receiverId));
         } else{
             chatMessage.setConversationId(incomingMessageDTO.getConversationId());
         }
