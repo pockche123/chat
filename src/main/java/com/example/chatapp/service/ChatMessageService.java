@@ -23,20 +23,13 @@ import java.util.stream.Collectors;
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final KafkaMessageQueueService messageQueueService;
     private final MessageProcessorFactory messageProcessorFactory;
-    private final GroupRepository groupRepository;
-    private final DirectConversationService directConversationService;
-    private final DirectConversationRepository directConversationRepository;
 
-    public ChatMessageService(ChatMessageRepository chatMessageRepository, KafkaMessageQueueService messageQueueService, MessageProcessorFactory messageProcessorFactory, GroupRepository groupRepository, DirectConversationService directConversationService, DirectConversationRepository directConversationRepository) {
+
+    public ChatMessageService(ChatMessageRepository chatMessageRepository, MessageProcessorFactory messageProcessorFactory) {
         this.chatMessageRepository = chatMessageRepository;
-        this.messageQueueService = messageQueueService;
         this.messageProcessorFactory = messageProcessorFactory;
-        this.groupRepository = groupRepository;
 
-        this.directConversationService = directConversationService;
-        this.directConversationRepository = directConversationRepository;
     }
 
     public Flux<ChatMessage> processIncomingMessage(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
@@ -52,16 +45,5 @@ public class ChatMessageService {
                 });
     }
 
-    public Mono<List<UUID>> getReceivers(UUID conversationId, UUID currentUserId) {
-        return groupRepository.findById(conversationId)
-                .map(group ->
-                        group.getMemberIds().stream()
-                                .filter(memberId -> !memberId.equals(currentUserId))
-                                .collect(Collectors.toList())
-                        )
-                .switchIfEmpty(
-                        directConversationService.getOtherParticipant(conversationId, currentUserId)
-                                .map(List::of)
-                );
-    }
+
 }

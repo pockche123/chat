@@ -123,33 +123,6 @@ public class ChatMessageServiceTest {
         assertEquals(MessageStatus.READ, deliveredMessage.getStatus());
     }
 
-    @Test
-    void should_returnReceiversFromGroup_whenConversationIsGroup(){
-        UUID conversationId = UUID.randomUUID();
-        UUID senderId = UUID.randomUUID();
-        String content = "Hello world!";
-        UUID messageId = UUID.randomUUID();
-
-        IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
-        incomingMessageDTO.setConversationId(conversationId);
-        incomingMessageDTO.setMessageId(messageId);
-        incomingMessageDTO.setContent(content);
-        UUID mockReceiverId = UUID.randomUUID();
-        UUID mockReceiverId2 = UUID.randomUUID();
-
-        Group mockGroup = new Group();
-        mockGroup.setMemberIds(List.of(mockReceiverId, mockReceiverId2));
-        mockGroup.setConversationId(conversationId);
-
-        when(groupRepository.findById(conversationId)).thenReturn(Mono.just(mockGroup));
-
-        Mono<List<UUID>> actual= chatMessageService.getReceivers(conversationId, senderId);
-        List<UUID> actualList = actual.block();
-        assertNotNull(actual);
-        assertTrue(actualList.contains(mockReceiverId));
-        assertTrue(actualList.contains(mockReceiverId2));
-    }
-
 
 
 
