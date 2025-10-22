@@ -1,6 +1,7 @@
 package com.example.chatapp.service;
 
-import com.example.chatapp.dto.GroupDTO;
+import com.example.chatapp.dto.GroupRequestDTO;
+import com.example.chatapp.dto.GroupResponseDTO;
 import com.example.chatapp.model.Group;
 import com.example.chatapp.repository.GroupRepository;
 import org.reactivestreams.Publisher;
@@ -19,7 +20,7 @@ public class GroupService {
         this.groupRepository = groupRepository;
     }
 
-    public Mono<Group> createGroup(GroupDTO groupDTO) {
+    public Mono<GroupResponseDTO> createGroup(GroupRequestDTO groupDTO) {
 
         Group group = new Group();
         group.setConversationId(UUID.randomUUID());
@@ -27,7 +28,8 @@ public class GroupService {
         group.setAdminId(groupDTO.getAdminId());
         group.setCreatedAt(new Timestamp(System.currentTimeMillis()));
 
-        return groupRepository.save(group);
+        return groupRepository.save(group)
+                .map(this::toGroupResponseDTO);
     }
 
     public Mono<Void> addMemberToGroup(UUID id, UUID member3) {
@@ -44,5 +46,14 @@ public class GroupService {
                     group.getMemberIds().remove(member3);
                     return groupRepository.save(group);
                 }).then();
+    }
+
+    private GroupResponseDTO toGroupResponseDTO(Group group) {
+        GroupResponseDTO dto = new GroupResponseDTO();
+        dto.setConversationId(group.getConversationId());
+        dto.setMemberIds(group.getMemberIds());
+        dto.setName(group.getName());
+        dto.setAdminId(group.getAdminId());
+        return dto;
     }
 }
