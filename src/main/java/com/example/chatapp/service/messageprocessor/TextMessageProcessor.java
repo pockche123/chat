@@ -33,7 +33,7 @@ public class TextMessageProcessor implements MessageProcessingStrategy{
 //    This needs to change to get GetReceivers() because we there could be many receivers for group chat.
     @Override
     public Flux<ChatMessage> processMessages(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
-
+        log.info("Processing Message for text processor");
         return conversationService.getReceivers(incomingMessageDTO.getConversationId(), currentUserId)
                         .flatMapMany(receivers -> Flux.fromIterable(receivers)
                                 .map(receiverId -> createMessage(currentUserId, receiverId, incomingMessageDTO))
@@ -49,11 +49,9 @@ public class TextMessageProcessor implements MessageProcessingStrategy{
                 receiverId);
         ChatMessage chatMessage = new ChatMessage();
 
-        if(incomingMessageDTO.getConversationId() == null) {
-            chatMessage.setConversationId(generateConversationId(senderId, receiverId));
-        } else{
-            chatMessage.setConversationId(incomingMessageDTO.getConversationId());
-        }
+
+        chatMessage.setConversationId(incomingMessageDTO.getConversationId());
+
         chatMessage.setSenderId(senderId);
         chatMessage.setReceiverId(receiverId);
         chatMessage.setContent(incomingMessageDTO.getContent());
