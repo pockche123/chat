@@ -1,6 +1,7 @@
 package com.example.chatapp.unit.service;
 
-import com.example.chatapp.dto.GroupDTO;
+import com.example.chatapp.dto.GroupRequestDTO;
+import com.example.chatapp.dto.GroupResponseDTO;
 import com.example.chatapp.model.Group;
 import com.example.chatapp.repository.GroupRepository;
 import com.example.chatapp.service.GroupService;
@@ -44,12 +45,13 @@ public class GroupServiceTest {
         group.setAdminId(member1);
         group.setCreatedAt(now);
 
-        GroupDTO groupDTO = new GroupDTO(convoId, Arrays.asList(member1, member2, member3), "Monkey boys", member1);
+        GroupRequestDTO groupRequestDTO = new GroupRequestDTO( Arrays.asList(member1, member2, member3), "Monkey boys", member1);
 
 
         Mockito.when(groupRepository.save(any())).thenReturn(Mono.just(group));
 
-        Group actual = groupService.createGroup(groupDTO).block();
+        GroupResponseDTO actual = groupService.createGroup(groupRequestDTO).block();
+
 
         assertNotNull(actual);
     }
@@ -101,14 +103,5 @@ public class GroupServiceTest {
 
         assertFalse(group.getMemberIds().contains(member3));
     }
-
-
-
-
-
-
-
-
-
 
 }
