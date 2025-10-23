@@ -4,6 +4,8 @@ import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
+import com.example.chatapp.repository.DirectConversationRepository;
+import com.example.chatapp.repository.GroupRepository;
 import com.example.chatapp.service.messageprocessor.MessageProcessingStrategy;
 import com.example.chatapp.service.messageprocessor.MessageProcessorFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -12,25 +14,27 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final KafkaMessageQueueService messageQueueService;
     private final MessageProcessorFactory messageProcessorFactory;
 
-    public ChatMessageService(ChatMessageRepository chatMessageRepository, KafkaMessageQueueService messageQueueService, MessageProcessorFactory messageProcessorFactory) {
+
+    public ChatMessageService(ChatMessageRepository chatMessageRepository, MessageProcessorFactory messageProcessorFactory) {
         this.chatMessageRepository = chatMessageRepository;
-        this.messageQueueService = messageQueueService;
         this.messageProcessorFactory = messageProcessorFactory;
+
     }
 
-    public Mono<ChatMessage> processIncomingMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
+    public Flux<ChatMessage> processIncomingMessage(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
         MessageProcessingStrategy strategy = messageProcessorFactory.getProcessor(incomingMessageDTO.getType());
-        return strategy.processMessage(senderId, incomingMessageDTO);
+        return strategy.processMessages(currentUserId, incomingMessageDTO);
     }
 
     public Flux<ChatMessage> markDeliveredMessagesAsRead(UUID conversationId, UUID receiverId) {
@@ -40,4 +44,6 @@ public class ChatMessageService {
                     return chatMessageRepository.save(message);
                 });
     }
+
+
 }

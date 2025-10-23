@@ -85,8 +85,6 @@ public class ChatMessageListenerIntegrationTest {
         UUID userId = UUID.randomUUID();
         ChatMessage message = createMessage(userId);
 
-
-
         chatMessageRepository.save(message).block();
 
         localOnlineUserService.markUserOnline(userId).block();
@@ -101,7 +99,7 @@ public class ChatMessageListenerIntegrationTest {
 
         // Assert - delivery should be complete
         assertTrue(localOnlineUserService.isUserOnline(userId));
-        
+
         ChatMessage deliveredMessage = chatMessageRepository.findByMessageId(message.getMessageId())
                 .block();
         assertEquals(MessageStatus.DELIVERED, deliveredMessage.getStatus());

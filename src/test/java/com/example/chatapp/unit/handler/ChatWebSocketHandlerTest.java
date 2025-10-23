@@ -74,7 +74,7 @@ public class ChatWebSocketHandlerTest {
         WebSocketSession session = mock(WebSocketSession.class);
         IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
 
-        incomingMessageDTO.setReceiverId(UUID.randomUUID());
+
         incomingMessageDTO.setContent("Hello World!");
         UUID senderId = UUID.randomUUID();
         
@@ -89,10 +89,9 @@ public class ChatWebSocketHandlerTest {
 
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setSenderId(senderId);
-        chatMessage.setReceiverId(incomingMessageDTO.getReceiverId());
         chatMessage.setContent(incomingMessageDTO.getContent());
 
-        String json = "{\"receiverId\":\"" + incomingMessageDTO.getReceiverId() + "\",\"content\":\"Hello World!\"}";
+        String json = "{\"receiverId: mockID, content\":\"Hello World!\"}";
 
         WebSocketMessage webSocketMessage = mock(WebSocketMessage.class);
         when(webSocketMessage.getPayloadAsText()).thenReturn(json);
@@ -107,7 +106,7 @@ public class ChatWebSocketHandlerTest {
             throw new RuntimeException(e);
         }
 
-        when(chatMessageService.processIncomingMessage(any(UUID.class), any(IncomingMessageDTO.class))).thenReturn(Mono.just(chatMessage));
+        when(chatMessageService.processIncomingMessage(any(UUID.class), any(IncomingMessageDTO.class))).thenReturn(Flux.just(chatMessage));
         when(localOnlineUserService.markUserOnline(any(UUID.class))).thenReturn(Mono.empty());
 
 
@@ -278,10 +277,10 @@ public class ChatWebSocketHandlerTest {
         UUID senderId = UUID.randomUUID();
         ChatMessage expectedMessage = new ChatMessage();
         when(objectMapper.readValue(anyString(), eq(IncomingMessageDTO.class))).thenReturn(incomingMessageDTO);
-        when(chatMessageService.processIncomingMessage(senderId, incomingMessageDTO)).thenReturn(Mono.just(expectedMessage));
+        when(chatMessageService.processIncomingMessage(senderId, incomingMessageDTO)).thenReturn(Flux.just(expectedMessage));
 
 
-        Mono<ChatMessage> result = chatWebSocketHandler.processIncomingMessage(json, senderId);
+        Mono<ChatMessage> result = chatWebSocketHandler.processIncomingMessage(json, senderId).next();
 
         StepVerifier.create(result)
                 .expectNext(expectedMessage)
