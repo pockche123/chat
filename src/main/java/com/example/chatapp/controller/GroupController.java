@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/groups")
 public class GroupController {
@@ -22,5 +24,17 @@ public class GroupController {
     public Mono<ResponseEntity<GroupResponseDTO>> createGroup(@RequestBody GroupRequestDTO request) {
         return groupService.createGroup(request)
                 .map(group -> ResponseEntity.status(HttpStatus.CREATED).body(group));
+    }
+
+    @PatchMapping("/{groupId}/members/{memberId}")
+    public Mono<ResponseEntity<Void>> addMember(@PathVariable  UUID groupId, @PathVariable UUID memberId) {
+        return groupService.addMemberToGroup(groupId, memberId)
+                .then(Mono.just(ResponseEntity.noContent().build()));
+    }
+
+    @PatchMapping("/{groupId}/members/{memberId}/remove")
+    public Mono<ResponseEntity<Void>> removeMember(@PathVariable UUID groupId, @PathVariable UUID memberId) {
+        return groupService.removeMemberFromGroup(groupId, memberId)
+                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 }
