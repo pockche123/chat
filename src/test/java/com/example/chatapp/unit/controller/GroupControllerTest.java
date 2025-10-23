@@ -56,4 +56,27 @@ public class GroupControllerTest {
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
 
     }
+
+    @Test
+    void addMember_returns204NO_CONTENT(){
+        UUID groupId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        when(groupService.addMemberToGroup(groupId, memberId)).thenReturn(Mono.empty());
+        ResponseEntity<Void> result = groupController.addMember(groupId, memberId).block();
+        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+    }
+
+    @Test
+    void removeMember_returns204NO_CONTENT(){
+        UUID groupId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        when(groupService.removeMemberFromGroup(groupId, memberId)).thenReturn(Mono.empty());
+        ResponseEntity<Void> result = groupController.removeMember(groupId, memberId).block();
+        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+
+    }
+
+
+
+
 }
