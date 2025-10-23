@@ -25,6 +25,7 @@ Things to work on:
 - kubernetes config
 - for mediatype using pre-signed url 
 - group chats 
+- read_receipt model
 
 ## Next Logical Step:
 Enhance your existing services to actually use Redis and Kafka properly.

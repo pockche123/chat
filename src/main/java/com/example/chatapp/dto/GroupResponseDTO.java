@@ -1,24 +1,23 @@
 package com.example.chatapp.dto;
 
 
-
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
 
-@Data
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class IncomingMessageDTO {
-
-    private String type = "message";
-    private String content;
+public class GroupResponseDTO {
     private UUID conversationId;
-    private UUID messageId;
+    private List<UUID> memberIds;
+    private String name;
+    private UUID adminId;
+
 }

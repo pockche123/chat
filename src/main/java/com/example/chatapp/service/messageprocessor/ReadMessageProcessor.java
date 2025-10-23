@@ -5,6 +5,7 @@ import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
 import com.example.chatapp.repository.ChatMessageRepository;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -19,18 +20,11 @@ public class ReadMessageProcessor implements MessageProcessingStrategy {
     }
 
     @Override
-    public Mono<ChatMessage> processMessage(UUID senderId, IncomingMessageDTO incomingMessageDTO) {
-
-        return chatMessageRepository.findByMessageId(incomingMessageDTO.getMessageId())
+    public Flux<ChatMessage> processMessages(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
+        return chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(incomingMessageDTO.getConversationId(), currentUserId, MessageStatus.DELIVERED)
                 .flatMap(message -> {
-                    if(message.getStatus() == MessageStatus.DELIVERED) {
-                        message.setStatus(MessageStatus.READ);
-                        return chatMessageRepository.save(message);
-                    } else if(message.getStatus() == MessageStatus.READ) {
-                        return Mono.just(message);
-                    } else{
-                        return Mono.error(new RuntimeException("Message is not delivered yet"));
-                    }
+                   message.setStatus(MessageStatus.READ);
+                   return chatMessageRepository.save(message);
                 });
     }
 

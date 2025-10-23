@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -66,11 +67,11 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     public Mono<Void> handle(WebSocketSession session) {
 
      return authenticateSession(session)
-                .flatMap(senderId -> registerSession(senderId, session)
+                .flatMap(currentUserId -> registerSession(currentUserId, session)
                         .thenMany(session.receive()
                                 .map(WebSocketMessage::getPayloadAsText)
-                                .flatMap(json -> processIncomingMessage(json, senderId)))
-                        .doFinally(signal -> cleanUp(senderId))
+                                .flatMap(json -> processIncomingMessage(json, currentUserId)))
+                        .doFinally(signal -> cleanUp(currentUserId))
                         .then())
                 .onErrorResume(error -> {
                     log.error("Error processing message: {}", error.getMessage());
@@ -94,25 +95,25 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
 
 
-    public Mono<Void> registerSession(UUID senderId, WebSocketSession session) {
-        return onlineUserService.markUserOnline(senderId)
-                .doOnSuccess((ignored) -> {  messageDeliverService.registerSession(senderId, session);});
+    public Mono<Void> registerSession(UUID currentUserId, WebSocketSession session) {
+        return onlineUserService.markUserOnline(currentUserId)
+                .doOnSuccess((ignored) -> {  messageDeliverService.registerSession(currentUserId, session);});
 
     }
 
-    public Mono<ChatMessage> processIncomingMessage(String json, UUID senderId){
+    public Flux<ChatMessage> processIncomingMessage(String json, UUID currentUserId){
         try {
             IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
-            return chatMessageService.processIncomingMessage(senderId, msg);
+            return chatMessageService.processIncomingMessage(currentUserId, msg);
         } catch (Exception e) {
             log.error("[THREAD: {}] failed to parse JSON: {}", Thread.currentThread().getName(),  e.getMessage());
-            return Mono.error(new RuntimeException("Invalid message format", e));
+            return Flux.error(new RuntimeException("Invalid message format", e));
         }
     }
 
-    public void cleanUp(UUID senderId) {
-        onlineUserService.markUserOffline(senderId);
-        messageDeliverService.removeSession(senderId);
+    public void cleanUp(UUID currentUserId) {
+        onlineUserService.markUserOffline(currentUserId);
+        messageDeliverService.removeSession(currentUserId);
     }
 }
 

@@ -17,7 +17,7 @@ public class ChatMessageController {
     }
 
     @GetMapping
-    @RequestMapping("/v1/api/messages")
+    @RequestMapping("/api/v1/messages")
     public Flux<ChatMessage> getAllMessages(){
         return chatMessageRepository.findAll();
     }
