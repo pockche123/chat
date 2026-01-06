@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface UserDeviceRepository extends MongoRepository<UserDevice, String> {
 
     Optional<UserDevice> findUserDeviceByUserId(UUID uuid);
+
+
 }

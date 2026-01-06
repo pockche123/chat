@@ -209,3 +209,24 @@ BiFunction<Integer, Integer, Integer> add = (a, b) -> a + b;
 • **Functional programming** patterns
 
 Java 8+ functional programming building blocks! 🎯
+
+
+
+# AWS S3
+> Here's what each object does:
+
+1. PutObjectRequest - The actual S3 upload request
+   • bucket: Which S3 bucket to upload to
+   • key: The file path/name in S3 (like "chat-media/uuid-filename.jpg")
+   • contentType: MIME type (image/jpeg, video/mp4, etc.)
+   • This is what would normally be sent to S3 for a direct upload
+
+2. PutObjectPresignRequest - Instructions for creating the pre-signed URL
+   • signatureDuration: How long the URL stays valid (10 minutes)
+   • putObjectRequest: Wraps the actual request from #1
+   • This tells AWS "create a temporary URL for this specific upload request"
+
+3. PresignedPutObjectRequest - The result containing the pre-signed URL
+   • Contains the actual HTTPS URL with AWS signatures
+   • Client can use this URL to upload directly to S3
+   • No AWS credentials needed on client side
