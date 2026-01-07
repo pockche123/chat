@@ -9,6 +9,7 @@ import com.example.chatapp.service.GoogleOAuthService;
 import com.example.chatapp.service.OAuthProviderService;
 import com.example.chatapp.service.OAuthService;
 import com.example.chatapp.util.JwtUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -59,7 +60,7 @@ public class OAuthServiceTest {
     }
 
     @Test
-    public void test_handleAuth_returnsAuthDTO(){
+    public void test_handleAuth_returnsAuthDTO() throws JsonProcessingException {
         String provider = "google";
         String providerId = "googleId";
         String email = "test@gmail.com";

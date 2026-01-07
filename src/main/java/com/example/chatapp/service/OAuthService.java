@@ -7,6 +7,7 @@ import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
 import com.example.chatapp.util.JwtUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -41,7 +42,7 @@ public class OAuthService {
         return new AuthDTO(user.getUserId(), user.getUsername(), user.getUserStatus(), jwt);
     }
 
-    public AuthDTO handleOAuth(String provider, String code) {
+    public AuthDTO handleOAuth(String provider, String code) throws JsonProcessingException {
         OAuthProviderService providerService = oAuthProviderFactory.getProvider(provider);
         OAuthUserInfo userInfo = providerService.getUserInfo(code);
         return findOrCreateOAuthUser(userInfo.getId(), provider, userInfo.getEmail());
