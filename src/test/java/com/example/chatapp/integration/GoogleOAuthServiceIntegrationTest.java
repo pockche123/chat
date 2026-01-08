@@ -12,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
@@ -26,11 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Testcontainers
 @Slf4j
 public class GoogleOAuthServiceIntegrationTest {
-    @Autowired
-    private OAuthProviderFactory oAuthProviderFactory;
+
 
     @Autowired
-    private GoogleOAuthService googleOAuthService;  // Uses test properties
+    private GoogleOAuthService googleOAuthService;
 
     @Test
     void test_getUserInfo() throws IOException {
