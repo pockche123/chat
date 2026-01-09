@@ -3,17 +3,12 @@ package com.example.chatapp.integration;
 import com.example.chatapp.controller.OAuthController;
 import com.example.chatapp.dto.AuthDTO;
 import com.example.chatapp.dto.OAuthCallbackRequest;
-import com.example.chatapp.factory.OAuthProviderFactory;
 import com.example.chatapp.model.User;
 import com.example.chatapp.repository.UserRepository;
-import com.example.chatapp.service.GoogleOAuthService;
-import com.example.chatapp.service.OAuthService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +65,5 @@ public class OAuthIntegrationTest {
             assertEquals("google", user.get().getProvider());
             assertEquals("google123", user.get().getProviderId());
         }
-
     }
 }
