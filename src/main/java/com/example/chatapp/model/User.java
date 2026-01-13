@@ -23,6 +23,8 @@ public class User {
     private String username;
     private String password;
     private UserStatus userStatus;
+    private String provider;
+    private String providerId;
 
 
 }

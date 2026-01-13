@@ -24,8 +24,7 @@ Things to work on:
 - using Kafka for multi-server message sync queue. 
 - kubernetes config
 - for mediatype using pre-signed url 
-- group chats 
-- read_receipt model
+
 
 ## Next Logical Step:
 Enhance your existing services to actually use Redis and Kafka properly.
@@ -37,7 +36,14 @@ Currently your services are basic stubs:
 Which would you like to tackle first?
 1. Redis: Make it track online users properly (login/logout)
 2. Kafka: Add a consumer to receive messages from other servers
-
+3. Exceptions and error handling 
+3. how to download to presigned url. 
+4. different logs 
+5. auditing 
+6. oauth security kjl
+7. circuit breaker 
+8. rate-limiter
+asdf
 
 What to focus on next:
 

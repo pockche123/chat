@@ -125,4 +125,5 @@ public class UserServiceTest {
         assertEquals(UserStatus.ONLINE, authDTO.getUserStatus());
     }
 
+
 }
