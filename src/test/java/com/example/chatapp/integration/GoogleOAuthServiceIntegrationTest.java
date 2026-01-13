@@ -1,7 +1,6 @@
 package com.example.chatapp.integration;
 
 import com.example.chatapp.dto.OAuthUserInfo;
-import com.example.chatapp.factory.OAuthProviderFactory;
 import com.example.chatapp.service.GoogleOAuthService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
@@ -20,11 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(partitions = 16, topics = {"chat-messages"})
 @Testcontainers
 @Slf4j
 public class GoogleOAuthServiceIntegrationTest {
+
 
 
     @Autowired
@@ -33,7 +33,7 @@ public class GoogleOAuthServiceIntegrationTest {
     @Test
     void test_getUserInfo() throws IOException {
         try (MockWebServer mockServer = new MockWebServer()) {
-            mockServer.start(54321);  // Start on port 54321 to match properties
+            mockServer.start(54321);
 
             mockServer.enqueue(new MockResponse()
                     .setBody("{\"access_token\":\"token123\"}"));
