@@ -43,6 +43,7 @@ Which would you like to tackle first?
 7. circuit breaker 
 8. rate-limiter
 9. end-to-end encryption
+10. notification status and persistence
 
 What to focus on next:
 

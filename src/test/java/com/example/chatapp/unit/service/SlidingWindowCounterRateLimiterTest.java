@@ -1,6 +1,7 @@
 package com.example.chatapp.unit.service;
 
 import com.example.chatapp.service.SlidingWindowCounterRateLimiter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,26 +30,45 @@ public class SlidingWindowCounterRateLimiterTest {
     @InjectMocks
     private SlidingWindowCounterRateLimiter rateLimiter;
 
-    @Test
-    void isAllowed_returnsFalse_whenEstimatedCountIsLessThanMaxRequests(){
-        String key = "testKey";
-        int maxRequests = 5;
-        Duration windowSize = Duration.ofHours(1);
 
+    @BeforeEach
+    void setUp() {
         when(reactiveRedisTemplate.opsForValue()).thenReturn(valueOps);
+    }
 
-        when(valueOps.get(anyString()))
-                .thenReturn(Mono.just("1"))  // First call (current window)
-                .thenReturn(Mono.just("5"));  // Second call (previous window)
+    @Test
+    void isAllowed_returnsFalse_whenRateLimitExceeded() {
+        String key = "test-key";
+        int maxRequests = 10;
+        Duration windowSize = Duration.ofMinutes(1);
 
-
+        when(valueOps.get(anyString())).thenReturn(Mono.just("8"));
 
         StepVerifier.create(rateLimiter.isAllowed(key, maxRequests, windowSize))
                 .expectNext(false)
                 .verifyComplete();
+    }
 
 
 
+    @Test
+    void isAllowed_returnsTrue_whenEstimatedCountIsGreaterThanMaxRequests(){
+        String key = "testKey";
+        int maxRequests = 5;
+        Duration windowSize = Duration.ofHours(1);
 
+        when(valueOps.get(anyString()))
+                .thenReturn(Mono.just("1"))  // First call (current window)
+                .thenReturn(Mono.just("4"));
+
+        when(valueOps.increment(anyString()))
+                .thenReturn(Mono.just(1L));
+
+        when(reactiveRedisTemplate.expire(anyString(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
+
+        StepVerifier.create(rateLimiter.isAllowed(key, maxRequests, windowSize))
+                .expectNext(true)
+                .verifyComplete();
     }
 }
