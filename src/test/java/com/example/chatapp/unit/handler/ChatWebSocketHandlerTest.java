@@ -10,12 +10,15 @@ import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jnr.ffi.annotations.In;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.web.reactive.socket.CloseStatus;
 import org.springframework.web.reactive.socket.HandshakeInfo;
 import org.springframework.web.reactive.socket.WebSocketMessage;
@@ -50,10 +53,11 @@ public class ChatWebSocketHandlerTest {
     @Mock
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
+    @Mock
+    private RateLimiter rateLimiter;
 
 
-
-
+    @InjectMocks
     private ChatWebSocketHandler chatWebSocketHandler;
 
     @BeforeEach
@@ -340,6 +344,20 @@ public class ChatWebSocketHandlerTest {
         StepVerifier.create(chatWebSocketHandler.handle(session))
                 .expectError(RuntimeException.class)
                 .verify();
+    }
+
+    @Test
+    void processIncominMessage_throwsRateLimitException_whenLimitExceeded(){
+        UUID userId = UUID.randomUUID();
+        String json = "{\"recipientId\":\"123\",\"content\":\"test\"}";
+
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(false));
+
+        StepVerifier.create(handler.processIncomingMessage(json, userId))
+                .expectError(RateLimitExceededException.class)
+                .verify();
+
     }
 
 
