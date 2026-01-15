@@ -1,16 +1,18 @@
 package com.example.chatapp.repository;
 
 import com.example.chatapp.model.User;
-import org.springframework.data.mongodb.repository.MongoRepository;
+
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UserRepository extends MongoRepository<User, UUID> {
-    Optional<User> findByUsername(String username);
+public interface UserRepository extends ReactiveMongoRepository<User, UUID> {
+    Mono<User> findByUsername(String username);
 
-    Optional<User> findByProviderAndProviderId(String provider, String providerId);
+    Mono<User> findByProviderAndProviderId(String provider, String providerId);
 
 }

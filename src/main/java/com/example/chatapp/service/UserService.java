@@ -9,6 +9,8 @@ import com.example.chatapp.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
 import java.util.UUID;
 
 @Service
@@ -22,34 +24,47 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public UserDTO registerUser(String username, String password){
-        if(userRepository.findByUsername(username).isPresent()){
-            throw new RuntimeException("User already exists.");
-        }
-        User user = new User();
-        user.setUserId(UUID.randomUUID());
-        user.setUserStatus(UserStatus.OFFLINE);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setUsername(username);
+    public Mono<UserDTO> registerUser(String username, String password){
+        return userRepository.findByUsername(username)
+                .hasElement()
+                .flatMap(exists -> {
+                    if(exists){
+                        return Mono.error(new RuntimeException("User already exists"));
+                    }
+                    User user = new User();
+                    user.setUserId(UUID.randomUUID());
+                    user.setUserStatus(UserStatus.OFFLINE);
+                    user.setPassword(passwordEncoder.encode(password));
+                    user.setUsername(username);
 
-        userRepository.save(user);
-        return new UserDTO(user.getUsername(), user.getUserStatus());
+                    return userRepository.save(user)
+                            .map(savedUser -> new UserDTO(savedUser.getUsername(), savedUser.getUserStatus()));
+                });
+
+
+
     }
 
 
-    public AuthDTO loginUser(String username, String password){
+    public Mono<AuthDTO> loginUser(String username, String password) {
+        return userRepository.findByUsername(username)
+                .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+                .flatMap(user -> {
+                    if (!passwordEncoder.matches(password, user.getPassword())) {
+                        return Mono.error(new RuntimeException("Invalid password"));
+                    }
 
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found."));
+                    String token = jwtUtil.generateToken(user);
+                    user.setUserStatus(UserStatus.ONLINE);
 
-        if(!passwordEncoder.matches(password, user.getPassword())){
-            throw new RuntimeException("Invalid password.");
-        }
-
-        String token = jwtUtil.generateToken(user);
-
-        user.setUserStatus(UserStatus.ONLINE);
-        userRepository.save(user);
-
-        return new AuthDTO(user.getUserId(), user.getUsername(), user.getUserStatus(), token);
+                    return userRepository.save(user)
+                            .map(savedUser -> new AuthDTO(
+                                    savedUser.getUserId(),
+                                    savedUser.getUsername(),
+                                    savedUser.getUserStatus(),
+                                    token
+                            ));
+                });
     }
+
 }

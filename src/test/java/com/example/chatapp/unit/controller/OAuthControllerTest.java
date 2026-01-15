@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,12 +35,15 @@ public class OAuthControllerTest {
         OAuthCallbackRequest callbackRequest = new OAuthCallbackRequest(code);
 
         AuthDTO expectedAuthDTO = new AuthDTO();
-        when(oAuthService.handleOAuth(provider, code)).thenReturn(expectedAuthDTO);
+        when(oAuthService.handleOAuth(provider, code)).thenReturn(Mono.just(expectedAuthDTO));
 
-        ResponseEntity<AuthDTO> actual = oAuthController.handleOAuthCallback(provider, callbackRequest);
+        StepVerifier.create(oAuthController.handleOAuthCallback(provider, callbackRequest))
+                .expectNextMatches(response ->
+                        response.getStatusCode() == HttpStatus.OK &&
+                                response.getBody().equals(expectedAuthDTO)
+                )
+                .verifyComplete();
 
-        assertNotNull(actual);
-        assertEquals(expectedAuthDTO, actual.getBody());
-        assertEquals(HttpStatus.OK, actual.getStatusCode());
+
     }
 }

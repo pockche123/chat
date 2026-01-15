@@ -1,7 +1,6 @@
 package com.example.chatapp.unit.service;
 
-import com.example.chatapp.dto.AuthDTO;
-import com.example.chatapp.dto.UserDTO;
+
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
@@ -13,8 +12,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,22 +35,28 @@ public class UserServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
-
-
     @Test
     public void test_registerUser_registersUser(){
         String username = "testUser";
         String password = "testPassword";
         String encodedPassword = "encodedPassword";
 
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+        User savedUser = new User();
+        savedUser.setUserStatus(UserStatus.OFFLINE);
+        savedUser.setUsername(username);
+
+        when(userRepository.findByUsername(username)).thenReturn(Mono.empty());
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
+
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
 
-        UserDTO actual = userService.registerUser(username, password);
-
-        assertNotNull(actual);
-        assertEquals(UserStatus.OFFLINE, actual.getUserStatus());
-        assertEquals(username, actual.getUsername());
+        StepVerifier.create(userService.registerUser(username, password))
+                        .assertNext(actual -> {
+                            assertNotNull(actual);
+                            assertEquals(UserStatus.OFFLINE, actual.getUserStatus());
+                            assertEquals(username, actual.getUsername());
+                        })
+                .verifyComplete();
     }
 
     @Test
@@ -59,12 +65,14 @@ public class UserServiceTest {
         String username = "existingUser";
         User user = new User();
         user.setUsername(username);
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(username)).thenReturn(Mono.just(user));
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class, () -> userService.registerUser(username, "password"));
-
-        assertEquals("User already exists.", exception.getMessage());
+        StepVerifier.create(userService.registerUser(username, "password"))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof RuntimeException &&
+                                throwable.getMessage().equals("User already exists")
+                )
+                .verify();
 
     }
 
@@ -74,13 +82,14 @@ public class UserServiceTest {
         String username = "testUser";
         String password = "password";
 
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(username)).thenReturn(Mono.empty());
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class, () -> userService.loginUser(username, password)
-        );
-
-        assertEquals("User not found.", exception.getMessage());
+        StepVerifier.create(userService.loginUser(username, password))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof RuntimeException &&
+                                throwable.getMessage().equals("User not found")
+                )
+                .verify();
     }
 
     @Test
@@ -92,14 +101,16 @@ public class UserServiceTest {
         user.setUsername(username);
         user.setPassword("encodedPassword");
 
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(username)).thenReturn(Mono.just(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class, () -> userService.loginUser(username, password)
-        );
+        StepVerifier.create(userService.loginUser(username, password))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof RuntimeException &&
+                                throwable.getMessage().equals("Invalid password")
+                )
+                .verify();
 
-        assertEquals("Invalid password.", exception.getMessage());
     }
 
 
@@ -114,15 +125,19 @@ public class UserServiceTest {
         user.setUsername(username);
         user.setPassword("encodedPassword");
 
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(username)).thenReturn(Mono.just(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
         when(jwtUtil.generateToken(user)).thenReturn("token");
+        when(userRepository.save(user)).thenReturn(Mono.just(user));
 
-        AuthDTO authDTO = userService.loginUser(username, password);
+        StepVerifier.create(userService.loginUser(username, password))
+                .assertNext(authDTO ->{
+                    assertNotNull(authDTO);
+                    assertEquals(username, authDTO.getUsername());
+                    assertEquals(UserStatus.ONLINE, authDTO.getUserStatus());
+                } )
+                .verifyComplete();
 
-        assertNotNull(authDTO);
-        assertEquals(username, authDTO.getUsername());
-        assertEquals(UserStatus.ONLINE, authDTO.getUserStatus());
     }
 
 

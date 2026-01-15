@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import reactor.test.StepVerifier;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,12 +54,16 @@ public class UserRepositoryTest {
         user.setUsername(uniqueUsername);
         user.setPassword(passwordEncoder.encode("testPassword"));
         user.setUserStatus(UserStatus.ONLINE);
-        User savedUser = userRepository.save(user);
 
-        assertNotNull(savedUser.getUserId());
-        assertEquals(uniqueUsername, savedUser.getUsername());
-        assertEquals(UserStatus.ONLINE, savedUser.getUserStatus());
-        assertTrue(passwordEncoder.matches("testPassword", savedUser.getPassword()));
+        StepVerifier.create(userRepository.save(user))
+                .assertNext(savedUser -> {
+             assertNotNull(savedUser.getUserId());
+             assertEquals(uniqueUsername, savedUser.getUsername());
+             assertEquals(UserStatus.ONLINE, savedUser.getUserStatus());
+             assertTrue(passwordEncoder.matches("testPassword", savedUser.getPassword()));
+         }).verifyComplete();
+
+
     }
 
     @Test
@@ -73,13 +77,12 @@ public class UserRepositoryTest {
         user.setUserStatus(UserStatus.ONLINE);
         userRepository.save(user);
 
-        Optional<User> optionalUser = userRepository.findByUsername(uniqueUsername);
-        User savedUser = optionalUser.get();
-
-
-        assertNotNull(savedUser.getUserId());
-        assertEquals(uniqueUsername, savedUser.getUsername());
-        assertEquals(UserStatus.ONLINE, savedUser.getUserStatus());
-        assertTrue(passwordEncoder.matches("testPassword", savedUser.getPassword()));
+        StepVerifier.create(userRepository.findByUsername(uniqueUsername))
+                .assertNext(savedUser -> {
+                    assertNotNull(savedUser.getUserId());
+                    assertEquals(uniqueUsername, savedUser.getUsername());
+                    assertEquals(UserStatus.ONLINE, savedUser.getUserStatus());
+                    assertTrue(passwordEncoder.matches("testPassword", savedUser.getPassword()));
+                });
     }
 }
