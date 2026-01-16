@@ -25,6 +25,7 @@ public class User {
     private UserStatus userStatus;
     private String provider;
     private String providerId;
+    private String tier = "free";
 
 
 }

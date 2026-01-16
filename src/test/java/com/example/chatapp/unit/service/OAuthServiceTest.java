@@ -15,8 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,14 +49,16 @@ public class OAuthServiceTest {
         String providerId = "googleId";
         String email = "test@gmail.com";
 
+        User savedUser = new User();
 
-        when(userRepository.findByProviderAndProviderId(provider, providerId)).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(userRepository.findByProviderAndProviderId(provider, providerId)).thenReturn(Mono.empty());
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
         when(jwtUtil.generateToken(any(User.class))).thenReturn("token");
 
-        AuthDTO authDTO = oAuthService.findOrCreateOAuthUser(providerId, provider,email);
-        assertNotNull(authDTO);
-
+        StepVerifier.create(oAuthService.findOrCreateOAuthUser(providerId, provider,email))
+                        .assertNext(authDTO -> assertNotNull(authDTO))
+                                .verifyComplete();
     }
 
     @Test
@@ -72,13 +74,16 @@ public class OAuthServiceTest {
                 .email(email)
                 .build();
 
+
+        User savedUser = new User();
+
         when(providerFactory.getProvider(provider)).thenReturn(googleOAuthService);
         when(googleOAuthService.getUserInfo(code)).thenReturn(userInfo);
-        when(userRepository.findByProviderAndProviderId(provider, providerId)).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findByProviderAndProviderId(provider, providerId)).thenReturn(Mono.empty());
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
         when(jwtUtil.generateToken(any(User.class))).thenReturn("token");
 
-        AuthDTO actual = oAuthService.handleOAuth(provider, code);
+        AuthDTO actual = oAuthService.handleOAuth(provider, code).block();
 
         assertNotNull(actual);
     }

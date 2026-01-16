@@ -39,11 +39,11 @@ Which would you like to tackle first?
 3. Exceptions and error handling 
 3. how to download to presigned url. 
 4. different logs 
-5. auditing 
-6. oauth security kjl
+5. auditing
 7. circuit breaker 
 8. rate-limiter
-asdf
+9. end-to-end encryption
+10. notification status and persistence
 
 What to focus on next:
 

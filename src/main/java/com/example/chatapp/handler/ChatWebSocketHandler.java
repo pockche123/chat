@@ -1,20 +1,19 @@
 package com.example.chatapp.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
+import com.example.chatapp.exception.RateLimitExceededException;
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.service.ChatMessageService;
-import com.example.chatapp.service.OnlineUserService;
-import com.example.chatapp.service.MessageDeliveryService;
-import com.example.chatapp.service.ServerRegistryService;
+import com.example.chatapp.repository.UserRepository;
+import com.example.chatapp.service.*;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.UUID;
 
 
@@ -35,12 +34,20 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
     private final MessageDeliveryService messageDeliverService;
 
-    public ChatWebSocketHandler(ChatMessageService chatMessageService, ObjectMapper objectMapper, JwtUtil jwtUtil, OnlineUserService onlineUserService, MessageDeliveryService messageDeliveryService) {
+    private final SlidingWindowCounterRateLimiter rateLimiter;
+    private final UserRepository userRepository;
+
+    private final RateLimitService rateLimitService;
+
+    public ChatWebSocketHandler(ChatMessageService chatMessageService, ObjectMapper objectMapper, JwtUtil jwtUtil, OnlineUserService onlineUserService, MessageDeliveryService messageDeliveryService, SlidingWindowCounterRateLimiter rateLimiter, UserRepository userRepository, RateLimitService rateLimitService) {
         this.chatMessageService = chatMessageService;
         this.objectMapper = objectMapper;
         this.jwtUtil = jwtUtil;
         this.onlineUserService = onlineUserService;
         this.messageDeliverService = messageDeliveryService;
+        this.rateLimiter = rateLimiter;
+        this.userRepository = userRepository;
+        this.rateLimitService = rateLimitService;
     }
 
 //    @Override
@@ -102,13 +109,37 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     }
 
     public Flux<ChatMessage> processIncomingMessage(String json, UUID currentUserId){
-        try {
-            IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
-            return chatMessageService.processIncomingMessage(currentUserId, msg);
-        } catch (Exception e) {
-            log.error("[THREAD: {}] failed to parse JSON: {}", Thread.currentThread().getName(),  e.getMessage());
-            return Flux.error(new RuntimeException("Invalid message format", e));
-        }
+        String key = "messages:user:" + currentUserId;
+        return userRepository.findById(currentUserId)
+                .flatMap(user -> rateLimitService.getRateLimit(user.getTier()))
+                .flatMapMany(tierLimit ->
+                        rateLimiter.isAllowed(key,
+                                        tierLimit.getMaxRequests(),
+                                        Duration.ofMinutes(tierLimit.getWindowMinutes()))
+                                .flatMapMany(allowed -> {
+                                    if (!allowed) {
+                                        log.warn("Rate limit exceeded for user: {}", currentUserId);
+                                        return Flux.error(new RateLimitExceededException("Too many messages"));
+                                    }
+
+                                    try {
+                                        IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
+                                        return chatMessageService.processIncomingMessage(currentUserId, msg);
+                                    } catch (Exception e) {
+                                        log.error("Failed to parse JSON: {}", e.getMessage());
+                                        return Flux.error(new RuntimeException("Invalid message format", e));
+                                    }
+                                })
+                );
+
+//
+//        try {
+//            IncomingMessageDTO msg = objectMapper.readValue(json, IncomingMessageDTO.class);
+//            return chatMessageService.processIncomingMessage(currentUserId, msg);
+//        } catch (Exception e) {
+//            log.error("[THREAD: {}] failed to parse JSON: {}", Thread.currentThread().getName(),  e.getMessage());
+//            return Flux.error(new RuntimeException("Invalid message format", e));
+//        }
     }
 
     public void cleanUp(UUID currentUserId) {

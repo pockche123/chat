@@ -1,18 +1,20 @@
 package com.example.chatapp.unit.handler;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
+import com.example.chatapp.exception.RateLimitExceededException;
 import com.example.chatapp.handler.ChatWebSocketHandler;
 import com.example.chatapp.model.ChatMessage;
-import com.example.chatapp.service.ChatMessageService;
-import com.example.chatapp.service.LocalOnlineUserService;
-import com.example.chatapp.service.ServerRegistryService;
-import com.example.chatapp.service.WebSocketMessageDeliveryService;
+import com.example.chatapp.model.RateLimitTier;
+import com.example.chatapp.model.User;
+import com.example.chatapp.repository.UserRepository;
+import com.example.chatapp.service.*;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,23 +53,27 @@ public class ChatWebSocketHandlerTest {
     @Mock
     private WebSocketMessageDeliveryService webSocketMessageDeliveryService;
 
+    @Mock
+    private SlidingWindowCounterRateLimiter rateLimiter;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private RateLimitService rateLimitService;
 
 
 
-
+    @InjectMocks
     private ChatWebSocketHandler chatWebSocketHandler;
 
     @BeforeEach
-    void setUp() {
-        chatWebSocketHandler = new ChatWebSocketHandler(
-                chatMessageService,
-                objectMapper,
-                jwtUtil,
-                localOnlineUserService,
-                webSocketMessageDeliveryService
-        );
-        org.mockito.Mockito.reset(jwtUtil);
+    public void setUp() {
+        reset(objectMapper, chatMessageService,  rateLimiter);
+
     }
+
+
 
     @Test
     void test_handle_validJson_callsService(){
@@ -84,6 +91,17 @@ public class ChatWebSocketHandlerTest {
         when(session.getHandshakeInfo().getHeaders().getFirst("Authorization")).thenReturn("Bearer token");
         when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(senderId);
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
+
+
+        User user = new User();
+        user.setTier("free");
+        RateLimitTier tierLimit = new RateLimitTier("free", 20, 1);
+
+        when(userRepository.findById(senderId)).thenReturn(Mono.just(user));
+        when(rateLimitService.getRateLimit("free")).thenReturn(Mono.just(tierLimit));
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(true)); // Allow rate limit to pass
+
 
 
 
@@ -272,9 +290,18 @@ public class ChatWebSocketHandlerTest {
 
     @Test
     void processIncomingMessage_processesMessage() throws JsonProcessingException {
+        UUID senderId = UUID.randomUUID();
+        User user = new User();
+        user.setTier("free");
+        RateLimitTier tierLimit = new RateLimitTier("free", 20, 1);
+
+        when(userRepository.findById(senderId)).thenReturn(Mono.just(user));
+        when(rateLimitService.getRateLimit("free")).thenReturn(Mono.just(tierLimit));
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(true)); // Allow rate limit to pass
+
         IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
         String json = "{}";
-        UUID senderId = UUID.randomUUID();
         ChatMessage expectedMessage = new ChatMessage();
         when(objectMapper.readValue(anyString(), eq(IncomingMessageDTO.class))).thenReturn(incomingMessageDTO);
         when(chatMessageService.processIncomingMessage(senderId, incomingMessageDTO)).thenReturn(Flux.just(expectedMessage));
@@ -289,14 +316,22 @@ public class ChatWebSocketHandlerTest {
 
     @Test
     void  processIncomingMessage_throwsError() throws JsonProcessingException {
+        UUID senderId = UUID.randomUUID();
+        User user = new User();
+        user.setTier("free");
+        RateLimitTier tierLimit = new RateLimitTier("free", 20, 1);
+
+        when(userRepository.findById(senderId)).thenReturn(Mono.just(user));
+        when(rateLimitService.getRateLimit("free")).thenReturn(Mono.just(tierLimit));
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(true)); // Allow rate limit to pass
+
 
         when(objectMapper.readValue(anyString(), eq(IncomingMessageDTO.class))).thenThrow(new RuntimeException("Invalid JSON"));
-        UUID senderId = UUID.randomUUID();
 
         StepVerifier.create(chatWebSocketHandler.processIncomingMessage("invalidJson", senderId))
                 .expectError(RuntimeException.class)
                 .verify();
-
     }
 
     @Test
@@ -342,6 +377,24 @@ public class ChatWebSocketHandlerTest {
                 .verify();
     }
 
+    @Test
+    void processIncomingMessage_throwsRateLimitException_whenLimitExceeded(){
+        UUID userId = UUID.randomUUID();
+        String json = "{\"recipientId\":\"123\",\"content\":\"test\"}";
+
+        User user = new User();
 
 
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(false));
+
+        when(userRepository.findById(userId)).thenReturn(Mono.just(user));
+        when(rateLimitService.getRateLimit(user.getTier())).thenReturn(Mono.just(new RateLimitTier()));
+
+
+        StepVerifier.create(chatWebSocketHandler.processIncomingMessage(json, userId))
+                .expectError(RateLimitExceededException.class)
+                .verify();
+
+    }
 }
