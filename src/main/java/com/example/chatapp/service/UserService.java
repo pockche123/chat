@@ -2,27 +2,38 @@ package com.example.chatapp.service;
 
 import com.example.chatapp.dto.AuthDTO;
 import com.example.chatapp.dto.UserDTO;
+import com.example.chatapp.exception.RateLimitExceededException;
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
 import com.example.chatapp.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+
+    private final PasswordEncoder passwordEncoder;
+
+
+    private final JwtUtil jwtUtil;
+
+    private final SlidingWindowCounterRateLimiter rateLimiter;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, SlidingWindowCounterRateLimiter ratelLimiter) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.rateLimiter = ratelLimiter;
+    }
+
 
     public Mono<UserDTO> registerUser(String username, String password){
         return userRepository.findByUsername(username)
@@ -47,23 +58,32 @@ public class UserService {
 
 
     public Mono<AuthDTO> loginUser(String username, String password) {
-        return userRepository.findByUsername(username)
-                .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
-                .flatMap(user -> {
-                    if (!passwordEncoder.matches(password, user.getPassword())) {
-                        return Mono.error(new RuntimeException("Invalid password"));
+        String key = "login:username:"+  username;
+
+        return rateLimiter.isAllowed(key, 5, Duration.ofMinutes(15))
+                .flatMap(allowed -> {
+                    if (!allowed) {
+                        return Mono.error(new RateLimitExceededException("Too many login attempts. Try again later."));
                     }
 
-                    String token = jwtUtil.generateToken(user);
-                    user.setUserStatus(UserStatus.ONLINE);
+                    return userRepository.findByUsername(username)
+                            .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+                            .flatMap(user -> {
+                                if (!passwordEncoder.matches(password, user.getPassword())) {
+                                    return Mono.error(new RuntimeException("Invalid password"));
+                                }
 
-                    return userRepository.save(user)
-                            .map(savedUser -> new AuthDTO(
-                                    savedUser.getUserId(),
-                                    savedUser.getUsername(),
-                                    savedUser.getUserStatus(),
-                                    token
-                            ));
+                                String token = jwtUtil.generateToken(user);
+                                user.setUserStatus(UserStatus.ONLINE);
+
+                                return userRepository.save(user)
+                                        .map(savedUser -> new AuthDTO(
+                                                savedUser.getUserId(),
+                                                savedUser.getUsername(),
+                                                savedUser.getUserStatus(),
+                                                token
+                                        ));
+                            });
                 });
     }
 

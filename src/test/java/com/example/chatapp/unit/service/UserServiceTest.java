@@ -1,9 +1,11 @@
 package com.example.chatapp.unit.service;
 
 
+import com.example.chatapp.exception.RateLimitExceededException;
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
+import com.example.chatapp.service.SlidingWindowCounterRateLimiter;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.util.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -16,15 +18,15 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
-    @InjectMocks
-    private UserService userService;
 
     @Mock
     private UserRepository userRepository;
@@ -34,6 +36,13 @@ public class UserServiceTest {
 
     @Mock
     private JwtUtil jwtUtil;
+
+    @Mock
+    private SlidingWindowCounterRateLimiter rateLimiter;
+
+    @InjectMocks
+    private UserService userService;
+
 
     @Test
     public void test_registerUser_registersUser(){
@@ -84,6 +93,10 @@ public class UserServiceTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Mono.empty());
 
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
+
+
         StepVerifier.create(userService.loginUser(username, password))
                 .expectErrorMatches(throwable ->
                         throwable instanceof RuntimeException &&
@@ -101,6 +114,8 @@ public class UserServiceTest {
         user.setUsername(username);
         user.setPassword("encodedPassword");
 
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
         when(userRepository.findByUsername(username)).thenReturn(Mono.just(user));
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
@@ -130,6 +145,10 @@ public class UserServiceTest {
         when(jwtUtil.generateToken(user)).thenReturn("token");
         when(userRepository.save(user)).thenReturn(Mono.just(user));
 
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
+
+
         StepVerifier.create(userService.loginUser(username, password))
                 .assertNext(authDTO ->{
                     assertNotNull(authDTO);
@@ -139,6 +158,20 @@ public class UserServiceTest {
                 .verifyComplete();
 
     }
+
+    @Test
+    public void test_loginUser_throwsRateLimitExceededException(){
+        String username = "mockUsername";
+        String password = "mockPassword";
+
+        when(rateLimiter.isAllowed(anyString(), anyInt(), any(Duration.class))).thenReturn(Mono.just(false));
+
+        StepVerifier.create(userService.loginUser(username, password))
+                .expectError(RateLimitExceededException.class)
+                .verify();
+
+    }
+
 
 
 }

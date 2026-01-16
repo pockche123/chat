@@ -8,7 +8,6 @@ import com.example.chatapp.service.*;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.*;
 import reactor.core.publisher.Flux;
