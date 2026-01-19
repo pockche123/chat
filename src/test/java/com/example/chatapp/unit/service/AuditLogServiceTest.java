@@ -71,4 +71,26 @@ public class AuditLogServiceTest {
 
         verify(auditLogRepository).save(any(AuditLog.class));
     }
+
+    @Test
+    void logUserLogOut_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String ipAddress = "127.0.0.1";
+
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logLogout(userId, username)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getUsername().equals(username) &&
+                                audit.getAction().equals("LOGOUT")
+
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
 }

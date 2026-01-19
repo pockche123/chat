@@ -52,4 +52,7 @@ public class AuditLogService {
     }
 
 
+    public Mono<AuditLog> logLogout(UUID userId, String username) {
+        return logAudit(userId, username, "LOGOUT", "SUCCESS", null);
+    }
 }
