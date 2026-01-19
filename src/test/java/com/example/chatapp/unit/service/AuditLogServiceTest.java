@@ -48,4 +48,27 @@ public class AuditLogServiceTest {
 
         verify(auditLogRepository).save(any(AuditLog.class));
     }
+
+    @Test
+    void logLoginFailure_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String ipAddress = "127.0.0.1";
+        String failure = "Username or Password wrong.";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logLoginFailure(userId, username, failure)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getUsername().equals(username) &&
+                                audit.getAction().equals("LOGIN") &&
+                                audit.getStatus().equals("FAILURE")
+
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
 }

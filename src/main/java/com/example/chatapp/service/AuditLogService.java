@@ -23,6 +23,11 @@ public class AuditLogService {
         return logAudit(userId, username, "LOGIN", "SUCCESS", null);
     }
 
+    public Mono<AuditLog> logLoginFailure(UUID userId, String username, String reason) {
+        return logAudit(userId, username, "LOGIN", "FAILURE", reason);
+
+    }
+
 
     public Mono<AuditLog> logAudit(UUID userId, String username, String action, String status, String details) {
         return Mono.deferContextual(ctx -> {
@@ -45,4 +50,6 @@ public class AuditLogService {
         });
 
     }
+
+
 }
