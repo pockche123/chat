@@ -125,14 +125,270 @@ public class AuditLogServiceTest {
 
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
-        StepVerifier.create(auditLogService.logUserRegistrationFailure( reason)
+        StepVerifier.create(auditLogService.logUserRegistrationFailure(reason)
                         .contextWrite(Context.of("ipAddress", ipAddress))
                 ).expectNextMatches( audit ->
-
                                 audit.getAction().equals("REGISTER") &&
                                 audit.getStatus().equals("FAILURE") &&
                                 audit.getDetails().equals(reason) &&
                                 audit.getIpAddress().equals(ipAddress)
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logWebSocketConnect_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logWebSocketConnect(userId, username)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getUsername().equals(username) &&
+                                audit.getAction().equals("WEBSOCKET_CONNECT") &&
+                                audit.getStatus().equals("SUCCESS")
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logWebSocketDisconnect_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logWebSocketDisconnect(userId, username)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getUsername().equals(username) &&
+                                audit.getAction().equals("WEBSOCKET_DISCONNECT") &&
+                                audit.getStatus().equals("SUCCESS")
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logAuthenticationFailure_savesAuditLog(){
+        String ipAddress = "127.0.0.1";
+        String reason = "Invalid JWT token";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logAuthenticationFailure(reason)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getAction().equals("AUTHENTICATION") &&
+                                audit.getStatus().equals("FAILURE") &&
+                                audit.getDetails().equals(reason)
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logGroupCreated_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        UUID groupId = UUID.randomUUID();
+        int memberCount = 5;
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logGroupCreated(userId, username, groupId, memberCount)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getUsername().equals(username) &&
+                                audit.getAction().equals("GROUP_CREATED") &&
+                                audit.getStatus().equals("SUCCESS") &&
+                                audit.getDetails().contains(groupId.toString())
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logGroupMemberAdded_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        UUID groupId = UUID.randomUUID();
+        UUID addedUserId = UUID.randomUUID();
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logGroupMemberAdded(userId, username, groupId, addedUserId)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getAction().equals("GROUP_MEMBER_ADDED") &&
+                                audit.getDetails().contains(addedUserId.toString())
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logGroupMemberRemoved_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        UUID groupId = UUID.randomUUID();
+        UUID removedUserId = UUID.randomUUID();
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logGroupMemberRemoved(userId, username, groupId, removedUserId)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getAction().equals("GROUP_MEMBER_REMOVED") &&
+                                audit.getDetails().contains(removedUserId.toString())
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logMessageSent_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        UUID messageId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        String messageType = "TEXT";
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logMessageSent(userId, username, messageId, conversationId, messageType)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getAction().equals("MESSAGE_SENT") &&
+                                audit.getDetails().contains(messageId.toString())
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logMessageDelivered_savesAuditLog(){
+        UUID messageId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logMessageDelivered(messageId, receiverId)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(receiverId) &&
+                                audit.getAction().equals("MESSAGE_DELIVERED") &&
+                                audit.getDetails().contains(messageId.toString())
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logMessageRead_savesAuditLog(){
+        UUID messageId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logMessageRead(messageId, receiverId)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(receiverId) &&
+                                audit.getAction().equals("MESSAGE_READ") &&
+                                audit.getDetails().contains(messageId.toString())
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logFileUploadUrlGenerated_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String fileName = "document.pdf";
+        String contentType = "application/pdf";
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logFileUploadUrlGenerated(userId, username, fileName, contentType)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getAction().equals("FILE_UPLOAD_URL_GENERATED") &&
+                                audit.getDetails().contains(fileName)
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logFileDownloadUrlGenerated_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String fileKey = "chat-media/abc-123-document.pdf";
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logFileDownloadUrlGenerated(userId, username, fileKey)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getAction().equals("FILE_DOWNLOAD_URL_GENERATED") &&
+                                audit.getDetails().contains(fileKey)
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logRateLimitExceeded_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String action = "LOGIN";
+        String ipAddress = "127.0.0.1";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logRateLimitExceeded(userId, username, action)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getAction().equals("RATE_LIMIT_EXCEEDED") &&
+                                audit.getStatus().equals("FAILURE") &&
+                                audit.getDetails().contains(action)
                 )
                 .verifyComplete();
 
