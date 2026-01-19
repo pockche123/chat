@@ -64,7 +64,8 @@ public class AuditLogServiceTest {
                         audit.getUserId().equals(userId) &&
                                 audit.getUsername().equals(username) &&
                                 audit.getAction().equals("LOGIN") &&
-                                audit.getStatus().equals("FAILURE")
+                                audit.getStatus().equals("FAILURE") &&
+                                audit.getDetails().equals(failure)
 
                 )
                 .verifyComplete();
@@ -88,6 +89,50 @@ public class AuditLogServiceTest {
                                 audit.getUsername().equals(username) &&
                                 audit.getAction().equals("LOGOUT")
 
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logUserRegistration_savesAuditLog(){
+        UUID userId = UUID.randomUUID();
+        String username = "testuser";
+        String ipAddress = "127.0.0.1";
+        String message = "New user registered successfully: " + username;
+
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logUserRegistration(userId, username)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+                        audit.getUserId().equals(userId) &&
+                                audit.getUsername().equals(username) &&
+                                audit.getAction().equals("REGISTER") &&
+                                audit.getDetails().equals(message)
+                )
+                .verifyComplete();
+
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    void logUserRegistrationFailure_savesAuditLog(){
+        String ipAddress = "127.0.0.1";
+        String reason = "Username already exists";
+
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        StepVerifier.create(auditLogService.logUserRegistrationFailure( reason)
+                        .contextWrite(Context.of("ipAddress", ipAddress))
+                ).expectNextMatches( audit ->
+
+                                audit.getAction().equals("REGISTER") &&
+                                audit.getStatus().equals("FAILURE") &&
+                                audit.getDetails().equals(reason) &&
+                                audit.getIpAddress().equals(ipAddress)
                 )
                 .verifyComplete();
 

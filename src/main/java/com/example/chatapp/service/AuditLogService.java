@@ -55,4 +55,13 @@ public class AuditLogService {
     public Mono<AuditLog> logLogout(UUID userId, String username) {
         return logAudit(userId, username, "LOGOUT", "SUCCESS", null);
     }
+
+    public Mono<AuditLog> logUserRegistration(UUID userId, String username) {
+        String message = "New user registered successfully: " + username;
+        return logAudit(userId, username, "REGISTER", "SUCCESS", message);
+    }
+
+    public Mono<AuditLog> logUserRegistrationFailure( String reason) {
+        return logAudit(null, null, "REGISTER", "FAILURE", reason);
+    }
 }
