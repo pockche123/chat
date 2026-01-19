@@ -23,7 +23,20 @@ Things to work on:
 - using redis for online status
 - using Kafka for multi-server message sync queue. 
 - kubernetes config
-- for mediatype using pre-signed url 
+- end-to-end-encryption
+- auditing 
+
+
+WhatsApp:          Your App:
+─────────────      ──────────────────────
+Login ✅           Login ✅
+Registration ✅    Registration ✅
+Message sent ❌    Message sent ✅ (metadata only)
+Group created ❌   Group created ✅
+Member added ❌    Member added ✅
+File upload ❌     File upload ✅ (metadata)
+Read receipt ❌    Read receipt ✅
+
 
 
 ## Next Logical Step:
