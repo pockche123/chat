@@ -16,16 +16,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuditLog {
-
+    
     @PrimaryKey
     private UUID auditId;
     private UUID userId;
-    private String username;
     private String action;
-    private String details;
     private String status;
     private Instant timestamp;
     private String ipAddress;
-
-
+    private String details;
 }

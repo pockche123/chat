@@ -19,111 +19,105 @@ public class AuditLogService {
         this.auditLogRepository = auditLogRepository;
     }
 
-    public Mono<AuditLog> logLoginSuccess(UUID userId, String username) {
-        return logAudit(userId, username, "LOGIN", "SUCCESS", null);
+    public Mono<AuditLog> logLoginSuccess(UUID userId) {
+        return logAudit(userId, "LOGIN", "SUCCESS", null);
     }
 
-    public Mono<AuditLog> logLoginFailure(UUID userId, String username, String reason) {
-        return logAudit(userId, username, "LOGIN", "FAILURE", reason);
-
+    public Mono<AuditLog> logLoginFailure(UUID userId, String reason) {
+        return logAudit(userId, "LOGIN", "FAILURE", reason);
     }
 
-
-    public Mono<AuditLog> logAudit(UUID userId, String username, String action, String status, String details) {
+    public Mono<AuditLog> logAudit(UUID userId, String action, String status, String details) {
         return Mono.deferContextual(ctx -> {
             String ipAddress = ctx.get("ipAddress");
 
             AuditLog audit = new AuditLog();
             audit.setAuditId(UUID.randomUUID());
             audit.setUserId(userId);
-            audit.setUsername(username);
             audit.setAction(action);
             audit.setStatus(status);
             audit.setTimestamp(Instant.now());
             audit.setIpAddress(ipAddress);
             audit.setDetails(details);
 
-            log.info("AUDIT: action={} status={} userId={} username={} ip={}", action, status, userId, username, ipAddress);
+            log.info("AUDIT: action={} status={} userId={} ip={}", action, status, userId, ipAddress);
 
             return auditLogRepository.save(audit);
-
         });
-
     }
 
-
-    public Mono<AuditLog> logLogout(UUID userId, String username) {
-        return logAudit(userId, username, "LOGOUT", "SUCCESS", null);
+    public Mono<AuditLog> logLogout(UUID userId) {
+        return logAudit(userId, "LOGOUT", "SUCCESS", null);
     }
 
-    public Mono<AuditLog> logUserRegistration(UUID userId, String username) {
-        String message = "New user registered successfully: " + username;
-        return logAudit(userId, username, "REGISTER", "SUCCESS", message);
+    public Mono<AuditLog> logUserRegistration(UUID userId) {
+        String message = "New user registered successfully: " + userId;
+        return logAudit(userId, "REGISTER", "SUCCESS", message);
     }
 
     public Mono<AuditLog> logUserRegistrationFailure(String reason) {
-        return logAudit(null, null, "REGISTER", "FAILURE", reason);
+        return logAudit(null, "REGISTER", "FAILURE", reason);
     }
 
     // WebSocket Connection
-    public Mono<AuditLog> logWebSocketConnect(UUID userId, String username) {
-        return logAudit(userId, username, "WEBSOCKET_CONNECT", "SUCCESS", null);
+    public Mono<AuditLog> logWebSocketConnect(UUID userId) {
+        return logAudit(userId, "WEBSOCKET_CONNECT", "SUCCESS", null);
     }
 
-    public Mono<AuditLog> logWebSocketDisconnect(UUID userId, String username) {
-        return logAudit(userId, username, "WEBSOCKET_DISCONNECT", "SUCCESS", null);
+    public Mono<AuditLog> logWebSocketDisconnect(UUID userId) {
+        return logAudit(userId, "WEBSOCKET_DISCONNECT", "SUCCESS", null);
     }
 
     public Mono<AuditLog> logAuthenticationFailure(String reason) {
-        return logAudit(null, null, "AUTHENTICATION", "FAILURE", reason);
+        return logAudit(null, "AUTHENTICATION", "FAILURE", reason);
     }
 
     // Group Management
-    public Mono<AuditLog> logGroupCreated(UUID userId, String username, UUID groupId, int memberCount) {
+    public Mono<AuditLog> logGroupCreated(UUID userId, UUID groupId, int memberCount) {
         String details = "groupId: " + groupId + ", members: " + memberCount;
-        return logAudit(userId, username, "GROUP_CREATED", "SUCCESS", details);
+        return logAudit(userId, "GROUP_CREATED", "SUCCESS", details);
     }
 
-    public Mono<AuditLog> logGroupMemberAdded(UUID userId, String username, UUID groupId, UUID addedUserId) {
+    public Mono<AuditLog> logGroupMemberAdded(UUID userId, UUID groupId, UUID addedUserId) {
         String details = "groupId: " + groupId + ", addedUser: " + addedUserId;
-        return logAudit(userId, username, "GROUP_MEMBER_ADDED", "SUCCESS", details);
+        return logAudit(userId, "GROUP_MEMBER_ADDED", "SUCCESS", details);
     }
 
-    public Mono<AuditLog> logGroupMemberRemoved(UUID userId, String username, UUID groupId, UUID removedUserId) {
+    public Mono<AuditLog> logGroupMemberRemoved(UUID userId, UUID groupId, UUID removedUserId) {
         String details = "groupId: " + groupId + ", removedUser: " + removedUserId;
-        return logAudit(userId, username, "GROUP_MEMBER_REMOVED", "SUCCESS", details);
+        return logAudit(userId, "GROUP_MEMBER_REMOVED", "SUCCESS", details);
     }
 
     // Message Operations
-    public Mono<AuditLog> logMessageSent(UUID userId, String username, UUID messageId, UUID conversationId, String messageType) {
+    public Mono<AuditLog> logMessageSent(UUID userId, UUID messageId, UUID conversationId, String messageType) {
         String details = "messageId: " + messageId + ", conversationId: " + conversationId + ", type: " + messageType;
-        return logAudit(userId, username, "MESSAGE_SENT", "SUCCESS", details);
+        return logAudit(userId, "MESSAGE_SENT", "SUCCESS", details);
     }
 
     public Mono<AuditLog> logMessageDelivered(UUID messageId, UUID receiverId) {
         String details = "messageId: " + messageId + ", receiverId: " + receiverId;
-        return logAudit(receiverId, null, "MESSAGE_DELIVERED", "SUCCESS", details);
+        return logAudit(receiverId, "MESSAGE_DELIVERED", "SUCCESS", details);
     }
 
     public Mono<AuditLog> logMessageRead(UUID messageId, UUID receiverId) {
         String details = "messageId: " + messageId;
-        return logAudit(receiverId, null, "MESSAGE_READ", "SUCCESS", details);
+        return logAudit(receiverId, "MESSAGE_READ", "SUCCESS", details);
     }
 
     // Media/File Access
-    public Mono<AuditLog> logFileUploadUrlGenerated(UUID userId, String username, String fileName, String contentType) {
+    public Mono<AuditLog> logFileUploadUrlGenerated(UUID userId, String fileName, String contentType) {
         String details = "fileName: " + fileName + ", contentType: " + contentType;
-        return logAudit(userId, username, "FILE_UPLOAD_URL_GENERATED", "SUCCESS", details);
+        return logAudit(userId, "FILE_UPLOAD_URL_GENERATED", "SUCCESS", details);
     }
 
-    public Mono<AuditLog> logFileDownloadUrlGenerated(UUID userId, String username, String fileKey) {
+    public Mono<AuditLog> logFileDownloadUrlGenerated(UUID userId, String fileKey) {
         String details = "fileKey: " + fileKey;
-        return logAudit(userId, username, "FILE_DOWNLOAD_URL_GENERATED", "SUCCESS", details);
+        return logAudit(userId, "FILE_DOWNLOAD_URL_GENERATED", "SUCCESS", details);
     }
 
     // Security Events
-    public Mono<AuditLog> logRateLimitExceeded(UUID userId, String username, String action) {
+    public Mono<AuditLog> logRateLimitExceeded(UUID userId, String action) {
         String details = "action: " + action;
-        return logAudit(userId, username, "RATE_LIMIT_EXCEEDED", "FAILURE", details);
+        return logAudit(userId, "RATE_LIMIT_EXCEEDED", "FAILURE", details);
     }
 }
