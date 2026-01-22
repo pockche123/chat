@@ -10,7 +10,6 @@ public class CassandraTestConfig {
         return new CassandraContainer<>("cassandra:3.11")
                 .withInitScript("init-keyspace.cql")
                 .withStartupTimeout(Duration.ofMinutes(5))
-                .withReuse(false)
                 .waitingFor(org.testcontainers.containers.wait.strategy.Wait.forListeningPort());
     }
     

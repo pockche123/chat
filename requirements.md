@@ -25,6 +25,7 @@ Things to work on:
 - kubernetes config
 - end-to-end-encryption
 - auditing 
+- make things non-blocking
 
 
 WhatsApp:          Your App:

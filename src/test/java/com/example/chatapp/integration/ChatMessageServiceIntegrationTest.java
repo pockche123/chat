@@ -44,39 +44,38 @@ public class ChatMessageServiceIntegrationTest {
     private DirectConversationRepository directConversationRepository;
 
 
-//    @Test
-//    void processIncomingMessage_handles_read_receipt(){
-//
-//        UUID receiverId = UUID.randomUUID();
-//        UUID messageId = UUID.randomUUID();
-//        UUID conversationId = UUID.randomUUID();
-//
-//        IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
-//        incomingMessageDTO.setContent("Hello World!");
-//        incomingMessageDTO.setType("read_receipt");
-//        incomingMessageDTO.setReceiverId(receiverId);
-//        incomingMessageDTO.setMessageId(messageId);
-//        incomingMessageDTO.setConversationId(conversationId);
-//
-//        UUID senderId = UUID.randomUUID();
-//
-//        ChatMessage messageDelivered = new ChatMessage();
-//        messageDelivered.setMessageId(messageId);
-//        messageDelivered.setStatus(MessageStatus.DELIVERED);
-//        messageDelivered.setConversationId(conversationId);
-//        messageDelivered.setContent("Hello World!");
-//        messageDelivered.setReceiverId(receiverId);
-//        messageDelivered.setSenderId(senderId);
-//        messageDelivered.setTimestamp(new Timestamp(System.currentTimeMillis()));
-//
-//        chatMessageRepository.save(messageDelivered).block();
-//
-//        ChatMessage message = chatMessageService.processIncomingMessage(senderId, incomingMessageDTO).blockFirst();
-//
-//        assertNotNull(message);
-//        assertEquals(MessageStatus.READ, message.getStatus());
-//
-//    }
+    @Test
+    void processIncomingMessage_handles_read_receipt(){
+
+        UUID receiverId = UUID.randomUUID();
+        UUID messageId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+
+        IncomingMessageDTO incomingMessageDTO = new IncomingMessageDTO();
+        incomingMessageDTO.setContent("Hello World!");
+        incomingMessageDTO.setType("read_receipt");
+        incomingMessageDTO.setMessageId(messageId);
+        incomingMessageDTO.setConversationId(conversationId);
+
+        UUID senderId = UUID.randomUUID();
+
+        ChatMessage messageDelivered = new ChatMessage();
+        messageDelivered.setMessageId(messageId);
+        messageDelivered.setStatus(MessageStatus.DELIVERED);
+        messageDelivered.setConversationId(conversationId);
+        messageDelivered.setContent("Hello World!");
+        messageDelivered.setReceiverId(receiverId);
+        messageDelivered.setSenderId(senderId);
+        messageDelivered.setTimestamp(new Timestamp(System.currentTimeMillis()));
+
+        chatMessageRepository.save(messageDelivered).block();
+
+        ChatMessage message = chatMessageService.processIncomingMessage(senderId, incomingMessageDTO).blockFirst();
+
+        assertNotNull(message);
+        assertEquals(MessageStatus.READ, message.getStatus());
+
+    }
 
 
 }

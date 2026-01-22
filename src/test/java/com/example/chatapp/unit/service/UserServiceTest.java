@@ -5,6 +5,7 @@ import com.example.chatapp.exception.RateLimitExceededException;
 import com.example.chatapp.model.User;
 import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
+import com.example.chatapp.service.AuditLogService;
 import com.example.chatapp.service.SlidingWindowCounterRateLimiter;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.util.JwtUtil;
@@ -39,6 +40,9 @@ public class UserServiceTest {
 
     @Mock
     private SlidingWindowCounterRateLimiter rateLimiter;
+
+    @Mock
+    private AuditLogService auditLogService;
 
     @InjectMocks
     private UserService userService;
