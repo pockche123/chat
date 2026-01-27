@@ -42,7 +42,8 @@ public class SlidingWindowCounterRateLimiterTest {
         int maxRequests = 10;
         Duration windowSize = Duration.ofMinutes(1);
 
-        when(valueOps.get(anyString())).thenReturn(Mono.just("8"));
+        when(valueOps.get(anyString())).thenReturn(Mono.just("10"))
+                .thenReturn(Mono.just("10"));
 
         StepVerifier.create(rateLimiter.isAllowed(key, maxRequests, windowSize))
                 .expectNext(false)
@@ -63,6 +64,9 @@ public class SlidingWindowCounterRateLimiterTest {
 
         when(valueOps.increment(anyString()))
                 .thenReturn(Mono.just(1L));
+//        when(valueOps.increment(anyString())).thenReturn(Mono.just(9L));
+//        when(reactiveRedisTemplate.expire(anyString(), any(Duration.class))).thenReturn(Mono.just(true));
+
 
         when(reactiveRedisTemplate.expire(anyString(), any(Duration.class)))
                 .thenReturn(Mono.just(true));

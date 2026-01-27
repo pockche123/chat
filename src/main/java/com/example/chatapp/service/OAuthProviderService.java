@@ -1,9 +1,9 @@
 package com.example.chatapp.service;
 
 import com.example.chatapp.dto.OAuthUserInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import reactor.core.publisher.Mono;
 
 public interface OAuthProviderService {
 
-    OAuthUserInfo getUserInfo(String code) throws JsonProcessingException;
+    Mono<OAuthUserInfo> getUserInfo(String code);
 }

@@ -1,5 +1,6 @@
 package com.example.chatapp.integration;
 
+import com.example.chatapp.integration.config.CassandraTestConfig;
 import com.example.chatapp.model.DirectConversation;
 import com.example.chatapp.repository.DirectConversationRepository;
 import com.example.chatapp.service.ConversationService;
@@ -8,6 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,10 +25,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
+@Testcontainers
 @Slf4j
 public class ConversationServiceIntegrationTest {
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
 
     @Autowired
     private ConversationService conversationService;

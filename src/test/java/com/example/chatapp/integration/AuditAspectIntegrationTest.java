@@ -3,10 +3,11 @@ package com.example.chatapp.integration;
 import com.example.chatapp.dto.OAuthCallbackRequest;
 import com.example.chatapp.dto.OAuthUserInfo;
 import com.example.chatapp.integration.config.CassandraTestConfig;
+import com.example.chatapp.integration.config.RedisTestConfig;
 import com.example.chatapp.repository.AuditLogRepository;
 import com.example.chatapp.service.GoogleOAuthService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,10 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.mockito.Mockito.when;
@@ -29,19 +32,11 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
 @Testcontainers
 @Slf4j
 public class AuditAspectIntegrationTest {
 
-    @Container
-    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
-
-    @DynamicPropertySource
-    static void configureCassandra(DynamicPropertyRegistry registry) {
-        CassandraTestConfig.configureCassandra(registry, cassandra);
-    }
 
     @Autowired
     private WebTestClient webTestClient;
@@ -52,14 +47,26 @@ public class AuditAspectIntegrationTest {
     @MockitoBean
     private GoogleOAuthService googleOAuthService;
 
+    @BeforeEach
+    void setUp() {
+        auditLogRepository.deleteAll().block();
+    }
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
+
 
     @Test
-    void shouldCreateAuditLogOnSuccessfulLogin() throws JsonProcessingException {
+    void shouldCreateAuditLogOnSuccessfulLogin() {
 
         // Mock the OAuth provider
         OAuthUserInfo userInfo = new OAuthUserInfo("testId", "test@example.com", "testUsername");
-        when(googleOAuthService.getUserInfo("test-code")).thenReturn(userInfo);
-        log.info("Mocked OAuth service");
+        when(googleOAuthService.getUserInfo("test-code")).thenReturn(Mono.just(userInfo));
 
         OAuthCallbackRequest request = new OAuthCallbackRequest("test-code");
 
@@ -78,6 +85,28 @@ public class AuditAspectIntegrationTest {
                                 log.getStatus().equals("SUCCESS"))
                 .verifyComplete();
 
+    }
+
+    @Test
+    void shouldCreateAuditLogOnFailedLogin() {
+        // Mock the OAuth provider to return an error
+        when(googleOAuthService.getUserInfo("invalid-code"))
+                .thenReturn(Mono.error(new RuntimeException("Invalid OAuth code")));
+
+        OAuthCallbackRequest request = new OAuthCallbackRequest("invalid-code");
+
+        webTestClient.post()
+                .uri("/api/v1/auth/oauth/google/callback")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+        // Verify audit log was created with FAILURE status
+        StepVerifier.create(auditLogRepository.findAll())
+                .expectNextMatches(log ->
+                        log.getAction().equals("USER_LOGIN") &&
+                                log.getStatus().equals("FAILURE"))
+                .verifyComplete();
     }
 
 }

@@ -1,6 +1,7 @@
 package com.example.chatapp.integration;
 
 import com.example.chatapp.dto.IncomingMessageDTO;
+import com.example.chatapp.integration.config.CassandraTestConfig;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.DirectConversation;
 import com.example.chatapp.model.MessageStatus;
@@ -13,15 +14,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import reactor.core.publisher.Mono;
+
 
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,10 +32,19 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
+@Testcontainers
 @Slf4j
 public class ChatMessageServiceIntegrationTest {
+
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
@@ -40,8 +52,6 @@ public class ChatMessageServiceIntegrationTest {
     @Autowired
     private ChatMessageService chatMessageService;
 
-    @Autowired
-    private DirectConversationRepository directConversationRepository;
 
 
     @Test
@@ -70,7 +80,7 @@ public class ChatMessageServiceIntegrationTest {
 
         chatMessageRepository.save(messageDelivered).block();
 
-        ChatMessage message = chatMessageService.processIncomingMessage(senderId, incomingMessageDTO).blockFirst();
+        ChatMessage message = chatMessageService.processIncomingMessage(receiverId, incomingMessageDTO).blockFirst();
 
         assertNotNull(message);
         assertEquals(MessageStatus.READ, message.getStatus());

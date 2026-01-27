@@ -10,6 +10,7 @@ import com.example.chatapp.service.DistributedOnlineUserService;
 import com.example.chatapp.service.LocalOnlineUserService;
 import com.example.chatapp.service.WebSocketMessageDeliveryService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +28,7 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
-
+import reactor.test.StepVerifier;
 
 
 import java.sql.Timestamp;
@@ -44,7 +45,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
 @Testcontainers
 @Slf4j
@@ -81,7 +82,7 @@ public class ChatMessageListenerIntegrationTest {
 
 
     @Test
-    void test_chatMessageListener_deliversMessage(){
+    void test_chatMessageListener_deliversMessage() throws InterruptedException {
         UUID userId = UUID.randomUUID();
         ChatMessage message = createMessage(userId);
 
@@ -96,6 +97,9 @@ public class ChatMessageListenerIntegrationTest {
 
         // Act - trigger message processing (now synchronous)
         chatMessageListener.handleKafkaMessage(message);
+
+        // Wait for async processing to complete
+        Thread.sleep(500);
 
         // Assert - delivery should be complete
         assertTrue(localOnlineUserService.isUserOnline(userId));
@@ -122,9 +126,10 @@ public class ChatMessageListenerIntegrationTest {
         webSocketMessageDeliveryService.registerSession(userId, mockSession);
 
         // Message should remain in SENT status since delivery failed
-        ChatMessage failedMessage = chatMessageRepository.findByMessageId(message.getMessageId())
-                .block();
-        assertEquals(MessageStatus.SENT, failedMessage.getStatus());
+        StepVerifier.create(chatMessageRepository.findByMessageId(message.getMessageId()))
+                .assertNext(failedMessage ->   assertEquals(MessageStatus.SENT, failedMessage.getStatus()))
+                .verifyComplete();
+
     }
 
 

@@ -19,7 +19,7 @@ public class OAuthController {
 
     @PostMapping("/{provider}/callback")
     public Mono<ResponseEntity<AuthDTO>> handleOAuthCallback(@PathVariable String provider,
-                                                             @RequestBody OAuthCallbackRequest request) throws JsonProcessingException {
+                                                             @RequestBody OAuthCallbackRequest request) {
         String code = request.getCode();
         return oAuthService.handleOAuth(provider, code)
                 .map(ResponseEntity::ok);

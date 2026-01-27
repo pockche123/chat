@@ -33,7 +33,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
 @Testcontainers
@@ -62,14 +62,6 @@ public class LocalOnlineUserServiceIntegrationTest {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
-
-    @AfterEach
-    void cleanupTestData() {
-        // Clear Cassandra tables
-        chatMessageRepository.deleteAll().block();
-        // Clear Redis
-    }
-
 
     @Test
     void shouldDeliverUndeliveredMessagesWhenUserComesOnline(){

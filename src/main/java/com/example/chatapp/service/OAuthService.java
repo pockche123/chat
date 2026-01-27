@@ -51,10 +51,10 @@ public class OAuthService {
     }
 
     @Audited(action = "USER_LOGIN")
-    public Mono<AuthDTO> handleOAuth(String provider, String code) throws JsonProcessingException {
+    public Mono<AuthDTO> handleOAuth(String provider, String code) {
         OAuthProviderService providerService = oAuthProviderFactory.getProvider(provider);
-        OAuthUserInfo userInfo = providerService.getUserInfo(code);
-        log.info("UserInfo: {}", userInfo.toString());
-        return findOrCreateOAuthUser(userInfo.getId(), provider, userInfo.getEmail());
+        return providerService.getUserInfo(code)
+                .doOnNext(userInfo -> log.info("UserInfo: {}", userInfo.toString()))
+                .flatMap(userInfo -> findOrCreateOAuthUser(userInfo.getId(), provider, userInfo.getEmail()));
     }
 }

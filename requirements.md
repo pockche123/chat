@@ -25,7 +25,8 @@ Things to work on:
 - kubernetes config
 - end-to-end-encryption
 - auditing 
-- make things non-blocking
+- make things non-blocking - use reactor kafka isntaed of @KafkaListener
+- implement circuit breaker
 
 
 WhatsApp:          Your App:

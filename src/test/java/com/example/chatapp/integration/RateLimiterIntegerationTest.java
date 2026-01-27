@@ -1,5 +1,6 @@
 package com.example.chatapp.integration;
 
+import com.example.chatapp.integration.config.CassandraTestConfig;
 import com.example.chatapp.integration.config.RedisTestConfig;
 import com.example.chatapp.service.SlidingWindowCounterRateLimiter;
 import org.junit.jupiter.api.MethodOrderer;
@@ -8,9 +9,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.CassandraContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -20,6 +23,7 @@ import java.time.Duration;
 import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
@@ -29,9 +33,13 @@ public class RateLimiterIntegerationTest {
     @Container
     static GenericContainer<?> redis = RedisTestConfig.createRedisContainer();
 
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
     @DynamicPropertySource
     static void redisProperties(DynamicPropertyRegistry registry) {
         RedisTestConfig.configureRedis(registry, redis);
+        CassandraTestConfig.configureCassandra(registry, cassandra);
     }
 
     @Autowired
