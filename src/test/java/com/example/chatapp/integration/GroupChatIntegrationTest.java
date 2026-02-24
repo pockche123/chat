@@ -34,12 +34,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(partitions = 1, topics = {"chat-messages"})
 @Testcontainers
 @Slf4j
 public class GroupChatIntegrationTest {
 
+    @Container
+    static final CassandraContainer<?> cassandra = CassandraTestConfig.createCassandraContainer();
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        CassandraTestConfig.configureCassandra(registry, cassandra);
+    }
 
     @Autowired
     private ChatMessageService chatMessageService;

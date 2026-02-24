@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class GoogleOAuthService implements OAuthProviderService{
@@ -36,14 +37,13 @@ public class GoogleOAuthService implements OAuthProviderService{
     }
 
     @Override
-    public OAuthUserInfo getUserInfo(String code) throws JsonProcessingException {
-        String accessToken = exchangeCodeForAccessToken(code);
-        return fetchUserInfoFromGoogle(accessToken);
-
+    public Mono<OAuthUserInfo> getUserInfo(String code) {
+        return exchangeCodeForAccessToken(code)
+                .flatMap(this::fetchUserInfoFromGoogle);
     }
 
-    private String exchangeCodeForAccessToken(String code) throws JsonProcessingException {
-        String tokenResponse = webClient.post()
+    private Mono<String> exchangeCodeForAccessToken(String code) {
+        return webClient.post()
                 .uri(tokenUri)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .bodyValue("client_id=" + clientId +
@@ -53,28 +53,34 @@ public class GoogleOAuthService implements OAuthProviderService{
                         "&redirect_uri=" + redirectUri)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        // Parse JSON response to extract access_token
-        JsonNode jsonNode = objectMapper.readTree(tokenResponse);
-        return jsonNode.get("access_token").asText();
+                .map(tokenResponse -> {
+                    try {
+                        JsonNode jsonNode = objectMapper.readTree(tokenResponse);
+                        return jsonNode.get("access_token").asText();
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException("Failed to parse token response", e);
+                    }
+                });
     }
 
-    private OAuthUserInfo fetchUserInfoFromGoogle(String accessToken) throws JsonProcessingException {
-        String userResponse = webClient.get()
+    private Mono<OAuthUserInfo> fetchUserInfoFromGoogle(String accessToken) {
+        return webClient.get()
                 .uri(userinfoUri)
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        // Parse JSON response to create OAuthUserInfo
-        JsonNode userNode = objectMapper.readTree(userResponse);
-        return OAuthUserInfo.builder()
-                .id(userNode.get("id").asText())
-                .email(userNode.get("email").asText())
-                .username(userNode.get("email").asText())
-                .build();
+                .map(userResponse -> {
+                    try {
+                        JsonNode userNode = objectMapper.readTree(userResponse);
+                        return OAuthUserInfo.builder()
+                                .id(userNode.get("id").asText())
+                                .email(userNode.get("email").asText())
+                                .username(userNode.get("email").asText())
+                                .build();
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException("Failed to parse user info response", e);
+                    }
+                });
     }
 
 }

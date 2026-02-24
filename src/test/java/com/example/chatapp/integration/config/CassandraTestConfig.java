@@ -6,12 +6,18 @@ import java.time.Duration;
 
 public class CassandraTestConfig {
     
+    private static CassandraContainer<?> cassandraContainer;
+    
     public static CassandraContainer<?> createCassandraContainer() {
-        return new CassandraContainer<>("cassandra:3.11")
-                .withInitScript("init-keyspace.cql")
-                .withStartupTimeout(Duration.ofMinutes(5))
-                .withReuse(false)
-                .waitingFor(org.testcontainers.containers.wait.strategy.Wait.forListeningPort());
+        if (cassandraContainer == null) {
+            cassandraContainer = new CassandraContainer<>("cassandra:3.11")
+                    .withInitScript("init-keyspace.cql")
+                    .withStartupTimeout(Duration.ofMinutes(5))
+                    .withReuse(true)
+                    .waitingFor(org.testcontainers.containers.wait.strategy.Wait.forListeningPort());
+            cassandraContainer.start();
+        }
+        return cassandraContainer;
     }
     
     public static void configureCassandra(DynamicPropertyRegistry registry, CassandraContainer<?> cassandra) {

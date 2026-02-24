@@ -1,15 +1,14 @@
 package com.example.chatapp.service;
 
+import com.example.chatapp.annotation.Audited;
 import com.example.chatapp.dto.GroupRequestDTO;
 import com.example.chatapp.dto.GroupResponseDTO;
 import com.example.chatapp.model.Group;
 import com.example.chatapp.repository.GroupRepository;
-import org.reactivestreams.Publisher;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,6 +19,7 @@ public class GroupService {
         this.groupRepository = groupRepository;
     }
 
+    @Audited(action = "GROUP_CREATED")
     public Mono<GroupResponseDTO> createGroup(GroupRequestDTO groupDTO) {
 
         Group group = new Group();
@@ -32,6 +32,7 @@ public class GroupService {
                 .map(this::toGroupResponseDTO);
     }
 
+    @Audited(action = "MEMBER_ADDED")
     public Mono<Void> addMemberToGroup(UUID id, UUID member3) {
         return groupRepository.findById(id)
                 .flatMap(group -> {
@@ -40,6 +41,7 @@ public class GroupService {
                 }).then();
     }
 
+    @Audited(action = "MEMBER_REMOVED")
     public Mono<Void> removeMemberFromGroup(UUID id, UUID member3) {
         return groupRepository.findById(id)
                 .flatMap(group -> {

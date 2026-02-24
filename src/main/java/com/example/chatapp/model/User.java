@@ -27,5 +27,10 @@ public class User {
     private String providerId;
     private String tier = "free";
 
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
 
 }

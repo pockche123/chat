@@ -62,7 +62,7 @@ public class OAuthServiceTest {
     }
 
     @Test
-    public void test_handleAuth_returnsAuthDTO() throws JsonProcessingException {
+    public void test_handleAuth_returnsAuthDTO() {
         String provider = "google";
         String providerId = "googleId";
         String email = "test@gmail.com";
@@ -78,7 +78,7 @@ public class OAuthServiceTest {
         User savedUser = new User();
 
         when(providerFactory.getProvider(provider)).thenReturn(googleOAuthService);
-        when(googleOAuthService.getUserInfo(code)).thenReturn(userInfo);
+        when(googleOAuthService.getUserInfo(code)).thenReturn(Mono.just(userInfo));
         when(userRepository.findByProviderAndProviderId(provider, providerId)).thenReturn(Mono.empty());
         when(userRepository.save(any(User.class))).thenReturn(Mono.just(savedUser));
         when(jwtUtil.generateToken(any(User.class))).thenReturn("token");

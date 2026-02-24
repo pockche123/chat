@@ -13,3 +13,15 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     content text,
     status text
 );
+
+CREATE TABLE IF NOT Exists audit_logs
+(
+    auditId uuid,
+    userId uuid,
+    action text,
+    status text,
+    timestamp timestamp,
+    ipAddress text,
+    details text,
+    primary key (auditId)
+);

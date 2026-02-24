@@ -1,5 +1,6 @@
 package com.example.chatapp.service;
 
+import com.example.chatapp.annotation.Audited;
 import com.example.chatapp.dto.AuthDTO;
 import com.example.chatapp.dto.OAuthUserInfo;
 import com.example.chatapp.factory.OAuthProviderFactory;
@@ -8,12 +9,15 @@ import com.example.chatapp.model.UserStatus;
 import com.example.chatapp.repository.UserRepository;
 import com.example.chatapp.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+
 @Service
+@Slf4j
 public class OAuthService {
 
     private final UserRepository userRepository;
@@ -46,9 +50,11 @@ public class OAuthService {
 
     }
 
-    public Mono<AuthDTO> handleOAuth(String provider, String code) throws JsonProcessingException {
+    @Audited(action = "USER_LOGIN")
+    public Mono<AuthDTO> handleOAuth(String provider, String code) {
         OAuthProviderService providerService = oAuthProviderFactory.getProvider(provider);
-        OAuthUserInfo userInfo = providerService.getUserInfo(code);
-        return findOrCreateOAuthUser(userInfo.getId(), provider, userInfo.getEmail());
+        return providerService.getUserInfo(code)
+                .doOnNext(userInfo -> log.info("UserInfo: {}", userInfo.toString()))
+                .flatMap(userInfo -> findOrCreateOAuthUser(userInfo.getId(), provider, userInfo.getEmail()));
     }
 }

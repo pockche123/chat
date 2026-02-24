@@ -1,5 +1,6 @@
 package com.example.chatapp.service;
 
+import com.example.chatapp.annotation.Audited;
 import com.example.chatapp.dto.AuthDTO;
 import com.example.chatapp.dto.UserDTO;
 import com.example.chatapp.exception.RateLimitExceededException;
@@ -34,7 +35,7 @@ public class UserService {
         this.rateLimiter = ratelLimiter;
     }
 
-
+    @Audited(action = "USER_REGISTRATION")
     public Mono<UserDTO> registerUser(String username, String password){
         return userRepository.findByUsername(username)
                 .hasElement()
@@ -57,6 +58,7 @@ public class UserService {
     }
 
 
+    @Audited(action = "USER_LOGIN")
     public Mono<AuthDTO> loginUser(String username, String password) {
         String key = "login:username:"+  username;
 
