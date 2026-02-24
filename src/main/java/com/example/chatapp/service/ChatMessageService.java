@@ -1,5 +1,6 @@
 package com.example.chatapp.service;
 
+import com.example.chatapp.annotation.Audited;
 import com.example.chatapp.dto.IncomingMessageDTO;
 import com.example.chatapp.model.ChatMessage;
 import com.example.chatapp.model.MessageStatus;
@@ -26,11 +27,13 @@ public class ChatMessageService {
 
     }
 
+    @Audited(action = "MESSAGE_SENT")
     public Flux<ChatMessage> processIncomingMessage(UUID currentUserId, IncomingMessageDTO incomingMessageDTO) {
         MessageProcessingStrategy strategy = messageProcessorFactory.getProcessor(incomingMessageDTO.getType());
         return strategy.processMessages(currentUserId, incomingMessageDTO);
     }
 
+    @Audited(action = "READ_RECEIPT")
     public Flux<ChatMessage> markDeliveredMessagesAsRead(UUID conversationId, UUID receiverId) {
         return chatMessageRepository.findByConversationIdAndReceiverIdAndStatus(conversationId, receiverId, MessageStatus.DELIVERED)
                 .flatMap(message -> {
